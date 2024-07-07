@@ -1,0 +1,39 @@
+# OS X
+.DS_Store*
+#Icon?
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+*~
+
+# npm
+node_modules
+package-lock.json
+*.log
+*.gz
+
+# yarn
+yarn.lock
+
+# ts
+dist
+
+# secure
+.env
+supabase/functions/_shared/firebase-adminsdk-key.json
+old/supabase/functions/_shared/firebase-adminsdk-key.json
+
+# vscode
+.history
+
+# hardhat
+cache
+artifacts
+typechain*
+.openzeppelin
