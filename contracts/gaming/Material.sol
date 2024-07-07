@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+
+contract Material is ERC20Permit, Ownable2Step {
+    address public immutable _materialTrade;
+    string private _name;
+    string private _symbol;
+
+    event SetName(string name);
+    event SetSymbol(string symbol);
+
+    constructor(address owner_, string memory name_, string memory symbol_) ERC20Permit("Material") ERC20("", "") {
+        _materialTrade = msg.sender;
+        _name = name_;
+        _symbol = symbol_;
+        _transferOwnership(owner_);
+
+        emit SetName(name_);
+        emit SetSymbol(symbol_);
+    }
+
+    function name() public view virtual override returns (string memory) {
+        return _name;
+    }
+
+    function symbol() public view virtual override returns (string memory) {
+        return _symbol;
+    }
+
+    function setName(string memory name_) external onlyOwner {
+        _name = name_;
+        emit SetName(name_);
+    }
+
+    function setSymbol(string memory symbol_) external onlyOwner {
+        _symbol = symbol_;
+        emit SetSymbol(symbol_);
+    }
+
+    modifier onlyMaterialTrade() {
+        require(msg.sender == _materialTrade, "Material: caller is not the material trade");
+        _;
+    }
+
+    function mint(address to, uint256 amount) external onlyMaterialTrade {
+        _mint(to, amount);
+    }
+
+    function burn(address from, uint256 amount) external onlyMaterialTrade {
+        _burn(from, amount);
+    }
+}

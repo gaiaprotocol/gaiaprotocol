@@ -14,7 +14,7 @@ module.exports = {
     }],
   },
   networks: {
-    "base-mainnet": {
+    /*"base-mainnet": {
       url: "https://mainnet.base.org",
       accounts,
       chainId: 8453,
@@ -25,7 +25,7 @@ module.exports = {
       accounts,
       chainId: 84532,
       gasPrice: 1000000000,
-    },
+    },*/
   },
   etherscan: {
     apiKey: {
