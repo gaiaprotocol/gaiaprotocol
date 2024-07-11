@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-contract Material is ERC20Permit, Ownable2Step {
+contract MaterialV1 is ERC20Permit, Ownable2Step {
     address public immutable _materialTrade;
     string private _name;
     string private _symbol;
