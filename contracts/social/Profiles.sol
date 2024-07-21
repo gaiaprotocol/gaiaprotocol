@@ -6,37 +6,37 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract Profiles is OwnableUpgradeable {
-    struct Pfp {
-        address addr;
-        uint256 tokenId;
+    struct Profile {
+        address pfpAddress;
+        uint256 pfpTokenId;
+        string profileData;
     }
-
-    mapping(address => Pfp) private _pfp;
-    mapping(address => string) public profile; // json string
-
-    event PfpChanged(address indexed _addr, address indexed _pfpAddr, uint256 indexed _tokenId);
-    event ProfileChanged(address indexed _addr, string _profile);
+    mapping(address => Profile) public profiles;
+    event ProfileChanged(address indexed _address, address _pfpAddress, uint256 _pfpTokenId, string _profileData);
 
     function initialize() public initializer {
         __Ownable_init();
     }
 
-    function pfpOf(address _addr) public view returns (address, uint256) {
-        Pfp memory pfp = _pfp[_addr];
-        if (IERC721(pfp.addr).ownerOf(pfp.tokenId) == _addr) {
-            return (pfp.addr, pfp.tokenId);
+    function pfpOf(address _address) public view returns (address, uint256) {
+        Profile memory profile = profiles[_address];
+        if (IERC721(profile.pfpAddress).ownerOf(profile.pfpTokenId) == _address) {
+            return (profile.pfpAddress, profile.pfpTokenId);
         }
         return (address(0), 0);
     }
 
-    function changePfp(address _pfpAddr, uint256 _tokenId) public {
-        require(IERC721(_pfpAddr).ownerOf(_tokenId) == msg.sender, "Not owner");
-        _pfp[msg.sender] = Pfp(_pfpAddr, _tokenId);
-        emit PfpChanged(msg.sender, _pfpAddr, _tokenId);
+    function updateProfile(address _pfpAddress, uint256 _pfpTokenId, string memory _profileData) public {
+        require(
+            (_pfpAddress == address(0) && _pfpTokenId == 0) || IERC721(_pfpAddress).ownerOf(_pfpTokenId) == msg.sender,
+            "Profiles: You don't own this PFP"
+        );
+        profiles[msg.sender] = Profile(_pfpAddress, _pfpTokenId, _profileData);
+        emit ProfileChanged(msg.sender, _pfpAddress, _pfpTokenId, _profileData);
     }
 
-    function changeProfile(string memory _profile) public {
-        profile[msg.sender] = _profile;
-        emit ProfileChanged(msg.sender, _profile);
+    function deleteProfile() public {
+        delete profiles[msg.sender];
+        emit ProfileChanged(msg.sender, address(0), 0, "");
     }
 }
