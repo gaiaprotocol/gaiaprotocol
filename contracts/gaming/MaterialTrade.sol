@@ -70,12 +70,12 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         return address(newMaterial);
     }
 
-    function getPrice(uint256 supply, uint256 amount) public view returns (uint256) {
-        uint256 sum1 = ((((supply * (supply + 1 ether)) / 1 ether) * (2 * supply + 1 ether)) / 1 ether) / 6;
-        uint256 sum2 = (((((supply + amount) * (supply + 1 ether + amount)) / 1 ether) *
-            (2 * (supply + amount) + 1 ether)) / 1 ether) / 6;
-        uint256 summation = sum2 - sum1;
-        return summation / baseDivider;
+    function getPrice(uint256 supply, uint256 amount) public pure returns (uint256) {
+        uint256 startPriceWei = (1e15 + supply * 1e15);
+        uint256 endPriceWei = (1e15 + (supply + amount - 1) * 1e15);
+        uint256 totalCostWei = ((startPriceWei + endPriceWei) / 2) * amount;
+
+        return totalCostWei;
     }
 
     function getBuyPrice(address materialAddress, uint256 amount) public view returns (uint256) {
