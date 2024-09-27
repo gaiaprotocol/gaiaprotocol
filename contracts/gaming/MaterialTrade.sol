@@ -10,10 +10,17 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using AddressUpgradeable for address payable;
 
-    uint256 public constant PRICE_CHANGE_FACTOR = 1e15; // 0.001 ether per share
     address payable public protocolFeeDestination;
-    uint256 public protocolFeePercent;
-    uint256 public materialOwnerFeePercent;
+    uint256 public protocolFeePercent; // As a fraction of 1e18 (e.g., 1e16 for 1%)
+    uint256 public materialOwnerFeePercent; // As a fraction of 1e18
+
+    uint256 public initialPricePerToken; // Using 36 decimal fixed-point
+    uint256 public priceIncrementPerToken; // Using 36 decimal fixed-point
+
+    uint256 private constant DECIMALS = 18;
+    uint256 private constant PRICE_DECIMALS = 36;
+    uint256 private constant DECIMAL_FACTOR = 10 ** DECIMALS;
+    uint256 private constant PRICE_DECIMAL_FACTOR = 10 ** PRICE_DECIMALS;
 
     event SetProtocolFeeDestination(address indexed destination);
     event SetProtocolFeePercent(uint256 percent);
@@ -33,7 +40,9 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     function initialize(
         address payable _protocolFeeDestination,
         uint256 _protocolFeePercent,
-        uint256 _materialOwnerFeePercent
+        uint256 _materialOwnerFeePercent,
+        uint256 _initialPricePerToken,
+        uint256 _priceIncrementPerToken
     ) public initializer {
         __Ownable_init();
         __ReentrancyGuard_init();
@@ -41,6 +50,8 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         protocolFeeDestination = _protocolFeeDestination;
         protocolFeePercent = _protocolFeePercent;
         materialOwnerFeePercent = _materialOwnerFeePercent;
+        initialPricePerToken = _initialPricePerToken; // Should be set with 36 decimals
+        priceIncrementPerToken = _priceIncrementPerToken; // Should be set with 36 decimals
 
         emit SetProtocolFeeDestination(_protocolFeeDestination);
         emit SetProtocolFeePercent(_protocolFeePercent);
@@ -68,11 +79,22 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         return address(newMaterial);
     }
 
-    function getPrice(uint256 supply, uint256 amount) public pure returns (uint256) {
-        uint256 startPrice = 1e15 + (supply * PRICE_CHANGE_FACTOR);
-        uint256 endPrice = 1e15 + ((supply + amount - 1) * PRICE_CHANGE_FACTOR);
-        uint256 totalPrice = ((startPrice + endPrice) * amount) / 2;
-        return totalPrice;
+    function getPrice(uint256 supply, uint256 amount) public view returns (uint256) {
+        // Convert supply and amount to token units (considering decimals)
+        uint256 supplyTokens = supply;
+        uint256 amountTokens = amount;
+
+        // Calculate start and end price per token in 36 decimal fixed-point
+        uint256 startPricePerToken = initialPricePerToken + (supplyTokens * priceIncrementPerToken) / DECIMAL_FACTOR;
+        uint256 endPricePerToken = initialPricePerToken +
+            ((supplyTokens + amountTokens - 1) * priceIncrementPerToken) /
+            DECIMAL_FACTOR;
+
+        // Calculate total cost in 36 decimal fixed-point
+        uint256 totalCost = ((startPricePerToken + endPricePerToken) * amountTokens) / 2;
+
+        // Convert total cost to wei (from 36 decimals to 18 decimals)
+        return totalCost / PRICE_DECIMAL_FACTOR;
     }
 
     function getBuyPrice(address materialAddress, uint256 amount) public view returns (uint256) {
@@ -82,27 +104,28 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function getSellPrice(address materialAddress, uint256 amount) public view returns (uint256) {
         MaterialV1 material = MaterialV1(materialAddress);
-        return getPrice(material.totalSupply() - amount, amount);
+        uint256 supplyAfterSale = material.totalSupply() - amount;
+        return getPrice(supplyAfterSale, amount);
     }
 
     function getBuyPriceAfterFee(address materialAddress, uint256 amount) external view returns (uint256) {
         uint256 price = getBuyPrice(materialAddress, amount);
-        uint256 protocolFee = (price * protocolFeePercent) / 1 ether;
-        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1 ether;
+        uint256 protocolFee = (price * protocolFeePercent) / 1e18;
+        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1e18;
         return price + protocolFee + materialOwnerFee;
     }
 
     function getSellPriceAfterFee(address materialAddress, uint256 amount) external view returns (uint256) {
         uint256 price = getSellPrice(materialAddress, amount);
-        uint256 protocolFee = (price * protocolFeePercent) / 1 ether;
-        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1 ether;
+        uint256 protocolFee = (price * protocolFeePercent) / 1e18;
+        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1e18;
         return price - protocolFee - materialOwnerFee;
     }
 
     function executeTrade(address materialAddress, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
         MaterialV1 material = MaterialV1(materialAddress);
-        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1 ether;
-        uint256 protocolFee = (price * protocolFeePercent) / 1 ether;
+        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1e18;
+        uint256 protocolFee = (price * protocolFeePercent) / 1e18;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + materialOwnerFee, "Insufficient payment");
