@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using AddressUpgradeable for address payable;
 
-    uint256 internal baseDivider;
+    uint256 public constant PRICE_CHANGE_FACTOR = 1e15; // 0.001 ether per share
     address payable public protocolFeeDestination;
     uint256 public protocolFeePercent;
     uint256 public materialOwnerFeePercent;
@@ -31,7 +31,6 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     );
 
     function initialize(
-        uint256 _baseDivider,
         address payable _protocolFeeDestination,
         uint256 _protocolFeePercent,
         uint256 _materialOwnerFeePercent
@@ -39,7 +38,6 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         __Ownable_init();
         __ReentrancyGuard_init();
 
-        baseDivider = _baseDivider;
         protocolFeeDestination = _protocolFeeDestination;
         protocolFeePercent = _protocolFeePercent;
         materialOwnerFeePercent = _materialOwnerFeePercent;
@@ -71,11 +69,10 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function getPrice(uint256 supply, uint256 amount) public pure returns (uint256) {
-        uint256 startPriceWei = (1e15 + supply * 1e15);
-        uint256 endPriceWei = (1e15 + (supply + amount - 1) * 1e15);
-        uint256 totalCostWei = ((startPriceWei + endPriceWei) / 2) * amount;
-
-        return totalCostWei;
+        uint256 startPrice = 1e15 + (supply * PRICE_CHANGE_FACTOR);
+        uint256 endPrice = 1e15 + ((supply + amount - 1) * PRICE_CHANGE_FACTOR);
+        uint256 totalPrice = ((startPrice + endPrice) * amount) / 2;
+        return totalPrice;
     }
 
     function getBuyPrice(address materialAddress, uint256 amount) public view returns (uint256) {
