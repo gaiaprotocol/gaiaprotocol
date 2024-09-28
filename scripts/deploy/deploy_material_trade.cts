@@ -39,10 +39,11 @@ async function main() {
   const initData = MaterialTrade.interface.encodeFunctionData(
     "initialize",
     [
-      16000n * 10000n, //IMPORTANT! base divider
       "0x48674148a4043EAadB92E5D8D7C493121D6489b1",
       50000000000000000n,
       50000000000000000n,
+      10000000000000000000000000000000n,
+      10000000000000000000000000000000n,
     ],
   );
   const proxy = await TransparentUpgradeableProxy.deploy(

@@ -8,9 +8,12 @@ contract MaterialV1 is ERC20Permit, Ownable2Step {
     address public immutable _materialTrade;
     string private _name;
     string private _symbol;
+    mapping(address => bool) public whitelist;
 
     event SetName(string name);
     event SetSymbol(string symbol);
+    event AddToWhitelist(address indexed account);
+    event RemoveFromWhitelist(address indexed account);
 
     constructor(address owner_, string memory name_, string memory symbol_) ERC20Permit("Material") ERC20("", "") {
         _materialTrade = msg.sender;
@@ -51,5 +54,29 @@ contract MaterialV1 is ERC20Permit, Ownable2Step {
 
     function burn(address from, uint256 amount) external onlyMaterialTrade {
         _burn(from, amount);
+    }
+
+    function addToWhitelist(address _address) external onlyOwner {
+        require(!whitelist[_address], "Address is already whitelisted");
+        whitelist[_address] = true;
+        emit AddToWhitelist(_address);
+    }
+
+    function removeFromWhitelist(address _address) external onlyOwner {
+        require(whitelist[_address], "Address is not whitelisted");
+        whitelist[_address] = false;
+        emit RemoveFromWhitelist(_address);
+    }
+
+    function isWhitelisted(address _address) public view returns (bool) {
+        return whitelist[_address];
+    }
+
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+        if (whitelist[msg.sender]) {
+            _transfer(sender, recipient, amount);
+            return true;
+        }
+        return super.transferFrom(sender, recipient, amount);
     }
 }
