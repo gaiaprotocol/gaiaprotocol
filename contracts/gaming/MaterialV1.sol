@@ -5,9 +5,11 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 contract MaterialV1 is ERC20Permit, Ownable2Step {
-    address public immutable _materialTrade;
+    address public immutable materialTrade;
+
     string private _name;
     string private _symbol;
+
     mapping(address => bool) public whitelist;
 
     event SetName(string name);
@@ -16,7 +18,7 @@ contract MaterialV1 is ERC20Permit, Ownable2Step {
     event RemoveFromWhitelist(address indexed account);
 
     constructor(address owner_, string memory name_, string memory symbol_) ERC20Permit("Material") ERC20("", "") {
-        _materialTrade = msg.sender;
+        materialTrade = msg.sender;
         _name = name_;
         _symbol = symbol_;
         _transferOwnership(owner_);
@@ -44,7 +46,7 @@ contract MaterialV1 is ERC20Permit, Ownable2Step {
     }
 
     modifier onlyMaterialTrade() {
-        require(msg.sender == _materialTrade, "Material: caller is not the material trade");
+        require(msg.sender == materialTrade, "Material: caller is not the material trade");
         _;
     }
 
