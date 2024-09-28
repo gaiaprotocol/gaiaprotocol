@@ -9,10 +9,11 @@ async function main() {
   const contract = await upgrades.deployProxy(
     MaterialTrade,
     [
-      16000n * 10000n, //IMPORTANT! base divider
       account1.address,
-      BigInt("50000000000000000"),
-      BigInt("50000000000000000"),
+      50000000000000000n,
+      50000000000000000n,
+      10000000000000000000000000000000n,
+      10000000000000000000000000000000n,
     ],
     {
       initializer: "initialize",
