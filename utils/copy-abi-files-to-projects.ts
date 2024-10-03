@@ -14,9 +14,11 @@ const DENO_COMMON_PATH = "./common.ts";
 const RELATIONS = {
   "gaming/MaterialTrade": {
     "gaiaprotocol-module/src/materialtech/contracts/abi": Env.APP,
+    "materialtech/app/contracts/abi": Env.APP,
   },
   "gaming/MaterialV1": {
     "gaiaprotocol-module/src/materialtech/contracts/abi": Env.APP,
+    "materialtech/app/contracts/abi": Env.APP,
   },
 };
 
