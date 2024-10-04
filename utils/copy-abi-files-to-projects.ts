@@ -9,16 +9,17 @@ enum Env {
 const APP_ETHERS_PATH = "ethers";
 const APP_COMMON_PATH = "./common";
 const DENO_ETHERS_PATH = "https://esm.sh/ethers@6.7.0";
-const DENO_COMMON_PATH = "./common.ts";
+const DENO_COMMON_PATH =
+  "https://raw.githubusercontent.com/yjgaia/contract-module/refs/heads/main/deno/abi/common.ts";
 
 const RELATIONS = {
   "gaming/MaterialTrade": {
     "gaiaprotocol-module/src/materialtech/contracts/abi": Env.APP,
-    "materialtech/app/contracts/abi": Env.APP,
+    "gaiaprotocol-module/deno/contracts/abi": Env.DENO,
   },
   "gaming/MaterialV1": {
     "gaiaprotocol-module/src/materialtech/contracts/abi": Env.APP,
-    "materialtech/app/contracts/abi": Env.APP,
+    "gaiaprotocol-module/deno/contracts/abi": Env.DENO,
   },
 };
 
