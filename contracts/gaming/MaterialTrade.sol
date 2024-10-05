@@ -11,16 +11,9 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using AddressUpgradeable for address payable;
 
     address payable public protocolFeeDestination;
-    uint256 public protocolFeePercent; // As a fraction of 1e18 (e.g., 1e16 for 1%)
-    uint256 public materialOwnerFeePercent; // As a fraction of 1e18
-
-    uint256 public initialPricePerToken; // Using 36 decimal fixed-point
-    uint256 public priceIncrementPerToken; // Using 36 decimal fixed-point
-
-    uint256 private constant DECIMALS = 18;
-    uint256 private constant PRICE_DECIMALS = 36;
-    uint256 private constant DECIMAL_FACTOR = 10 ** DECIMALS;
-    uint256 private constant PRICE_DECIMAL_FACTOR = 10 ** PRICE_DECIMALS;
+    uint256 public protocolFeePercent;
+    uint256 public materialOwnerFeePercent;
+    uint256 public priceIncrementPerToken;
 
     event SetProtocolFeeDestination(address indexed destination);
     event SetProtocolFeePercent(uint256 percent);
@@ -41,7 +34,6 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address payable _protocolFeeDestination,
         uint256 _protocolFeePercent,
         uint256 _materialOwnerFeePercent,
-        uint256 _initialPricePerToken,
         uint256 _priceIncrementPerToken
     ) public initializer {
         __Ownable_init();
@@ -50,8 +42,7 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         protocolFeeDestination = _protocolFeeDestination;
         protocolFeePercent = _protocolFeePercent;
         materialOwnerFeePercent = _materialOwnerFeePercent;
-        initialPricePerToken = _initialPricePerToken; // Should be set with 36 decimals
-        priceIncrementPerToken = _priceIncrementPerToken; // Should be set with 36 decimals
+        priceIncrementPerToken = _priceIncrementPerToken;
 
         emit SetProtocolFeeDestination(_protocolFeeDestination);
         emit SetProtocolFeePercent(_protocolFeePercent);
@@ -80,21 +71,21 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function getPrice(uint256 supply, uint256 amount) public view returns (uint256) {
-        // Convert supply and amount to token units (considering decimals)
-        uint256 supplyTokens = supply;
-        uint256 amountTokens = amount;
+        uint256 startPriceWei = priceIncrementPerToken + (supply * priceIncrementPerToken) / 1e18;
 
-        // Calculate start and end price per token in 36 decimal fixed-point
-        uint256 startPricePerToken = initialPricePerToken + (supplyTokens * priceIncrementPerToken) / DECIMAL_FACTOR;
-        uint256 endPricePerToken = initialPricePerToken +
-            ((supplyTokens + amountTokens - 1) * priceIncrementPerToken) /
-            DECIMAL_FACTOR;
+        uint256 endSupply = supply + amount;
+        if (endSupply >= 1e18) {
+            endSupply -= 1e18;
+        } else {
+            endSupply = 0;
+        }
 
-        // Calculate total cost in 36 decimal fixed-point
-        uint256 totalCost = ((startPricePerToken + endPricePerToken) * amountTokens) / 2;
+        uint256 endPriceWei = priceIncrementPerToken + (endSupply * priceIncrementPerToken) / 1e18;
 
-        // Convert total cost to wei (from 36 decimals to 18 decimals)
-        return totalCost / PRICE_DECIMAL_FACTOR;
+        uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
+        uint256 totalCostWei = (averagePriceWei * amount) / 1e18;
+
+        return totalCostWei;
     }
 
     function getBuyPrice(address materialAddress, uint256 amount) public view returns (uint256) {

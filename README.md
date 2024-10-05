@@ -12,4 +12,4 @@ node --loader ts-node/esm ./copy-abi-files-to-projects.ts
 ## Material Trade
 
 - Base Sepoila:
-  [0x3Fcea379bCc53Df5062Bc9428FEFb5c495bE75be](https://sepolia.basescan.org/address/0x3Fcea379bCc53Df5062Bc9428FEFb5c495bE75be#code)
+  [0xD3B4b6B07949A807E18d93F33Fe9a9516dADf453](https://sepolia.basescan.org/address/0xD3B4b6B07949A807E18d93F33Fe9a9516dADf453#code)
