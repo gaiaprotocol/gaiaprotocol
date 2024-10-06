@@ -18,7 +18,9 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     event SetProtocolFeeDestination(address indexed destination);
     event SetProtocolFeePercent(uint256 percent);
     event SetMaterialOwnerFeePercent(uint256 percent);
+
     event MaterialCreated(address indexed materialOwner, address indexed materialAddress, string name, string symbol);
+
     event Trade(
         address indexed trader,
         address indexed materialAddress,
