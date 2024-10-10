@@ -21,19 +21,20 @@ package-lock.json
 # yarn
 yarn.lock
 
-# ts
-dist
-
 # secure
 .env
-supabase/functions/_shared/firebase-adminsdk-key.json
-old/supabase/functions/_shared/firebase-adminsdk-key.json
 
-# vscode
-.history
+# Hardhat files
+/cache
+/artifacts
 
-# hardhat
-cache
-artifacts
-typechain*
-.openzeppelin
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-31337

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -15,7 +15,7 @@ contract Profiles is OwnableUpgradeable {
     event ProfileChanged(address indexed _address, address _pfpAddress, uint256 _pfpTokenId, string _profileData);
 
     function initialize() public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
     }
 
     function pfpOf(address _address) public view returns (address, uint256) {

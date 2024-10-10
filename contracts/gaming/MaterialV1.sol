@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -17,11 +17,14 @@ contract MaterialV1 is ERC20Permit, Ownable2Step {
     event AddToWhitelist(address indexed account);
     event RemoveFromWhitelist(address indexed account);
 
-    constructor(address owner_, string memory name_, string memory symbol_) ERC20Permit("Material") ERC20("", "") {
+    constructor(
+        address owner_,
+        string memory name_,
+        string memory symbol_
+    ) ERC20Permit("Material") ERC20("", "") Ownable(owner_) {
         materialTrade = msg.sender;
         _name = name_;
         _symbol = symbol_;
-        _transferOwnership(owner_);
 
         emit SetName(name_);
         emit SetSymbol(symbol_);

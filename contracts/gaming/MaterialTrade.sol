@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.27;
 
 import "./MaterialV1.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    using AddressUpgradeable for address payable;
+    using Address for address payable;
 
     address payable public protocolFeeDestination;
     uint256 public protocolFeePercent;
@@ -38,7 +38,7 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _materialOwnerFeePercent,
         uint256 _priceIncrementPerToken
     ) public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 
         protocolFeeDestination = _protocolFeeDestination;
