@@ -1,5 +1,6 @@
 import { verifyMessage } from "https://esm.sh/ethers@6.7.0";
 import { sign } from "https://esm.sh/jsonwebtoken@8.5.1";
+import { SiweMessage } from "https://esm.sh/siwe@2.3.2";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/main/api.ts";
 import {
   safeFetchSingle,
@@ -14,16 +15,29 @@ serve(async (req) => {
   if (!walletAddress || !signedMessage) throw new Error("Missing parameters");
 
   // Retrieve the nonce associated with the wallet address
-  const data = await safeFetchSingle<{ nonce: string }>(
+  const data = await safeFetchSingle<
+    { nonce: string; domain: string; uri: string; issued_at: string }
+  >(
     "wallet_login_nonces",
     (b) => b.select().eq("wallet_address", walletAddress),
   );
 
   if (!data) throw new Error("Invalid wallet address");
 
+  const message = new SiweMessage({
+    domain: data.domain,
+    address: walletAddress,
+    statement: MESSAGE_FOR_WALLET_LOGIN,
+    uri: data.uri,
+    version: "1",
+    chainId: 1,
+    nonce: data.nonce,
+    issuedAt: data.issued_at,
+  });
+
   // Verify the signed message
   const verifiedAddress = verifyMessage(
-    `${MESSAGE_FOR_WALLET_LOGIN}\n\nNonce: ${data.nonce}`,
+    message.prepareMessage(),
     signedMessage,
   );
 

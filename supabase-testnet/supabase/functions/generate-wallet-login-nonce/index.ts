@@ -5,8 +5,10 @@ import {
 } from "https://raw.githubusercontent.com/yjgaia/supabase-module/main/deno/supabase.ts";
 
 serve(async (req) => {
-  const { walletAddress } = await req.json();
-  if (!walletAddress) throw new Error("Missing wallet address");
+  const { walletAddress, domain, uri } = await req.json();
+  if (!walletAddress || !domain || !uri) {
+    throw new Error("Missing required parameters");
+  }
 
   // Delete any existing nonce for this wallet address
   await safeStore(
@@ -15,10 +17,10 @@ serve(async (req) => {
   );
 
   // Generate a new nonce and insert it into the database
-  const data = await safeFetchSingle<{ nonce: string }>(
+  const data = await safeFetchSingle<{ nonce: string; issued_at: string }>(
     "wallet_login_nonces",
-    (b) => b.insert({ wallet_address: walletAddress }).select(),
+    (b) => b.insert({ wallet_address: walletAddress, domain, uri }).select(),
   );
 
-  return data!.nonce;
+  return { nonce: data!.nonce, issuedAt: data!.issued_at };
 });
