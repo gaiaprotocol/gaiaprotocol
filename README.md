@@ -1,4 +1,4 @@
-# protocol
+# Gaia Protocol
 
 ```
 cd utils
