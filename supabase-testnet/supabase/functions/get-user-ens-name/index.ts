@@ -1,0 +1,13 @@
+import { Contract, JsonRpcProvider } from "https://esm.sh/ethers@6.7.0";
+import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/main/api.ts";
+import { extractWalletFromRequest } from "../_shared/auth.ts";
+
+const INFURA_API_KEY = Deno.env.get("INFURA_API_KEY")!;
+
+serve(async (req) => {
+  const walletAddress = extractWalletFromRequest(req);
+  const provider = new JsonRpcProvider(
+    `https://mainnet.infura.io/v3/${INFURA_API_KEY}`,
+  );
+  return await provider.lookupAddress(walletAddress) ?? "";
+});
