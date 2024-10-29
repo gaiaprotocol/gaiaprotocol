@@ -1,6 +1,6 @@
-import { Contract, JsonRpcProvider } from "https://esm.sh/ethers@6.7.0";
+import { JsonRpcProvider } from "https://esm.sh/ethers@6.7.0";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/main/api.ts";
-import { extractWalletFromRequest } from "../_shared/auth.ts";
+import { extractWalletFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/main/deno/auth.ts";
 
 const INFURA_API_KEY = Deno.env.get("INFURA_API_KEY")!;
 
