@@ -12,9 +12,12 @@ class APIError extends Error {
 
 serve(async (req) => {
   const walletAddress = extractWalletFromRequest(req);
+  const { next } = await req.json();
 
   const response = await fetch(
-    `https://api.opensea.io/api/v2/chain/ethereum/account/${walletAddress}/nfts?limit=200`,
+    `https://api.opensea.io/api/v2/chain/ethereum/account/${walletAddress}/nfts?limit=200${
+      next ? `&next=${next}` : ""
+    }`,
     { headers: { "X-API-KEY": OPENSEA_API_KEY } },
   );
 
