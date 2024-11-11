@@ -9,6 +9,7 @@ contract GaiaProtocolTokenTestnet is ERC20 {
     constructor() ERC20("Gaia Protocol", "GAIA") {}
 
     function mint(uint256 amount) external {
+        require(amount <= 10_000, "GaiaProtocolTokenTestnet: max mint amount is 10,000");
         _mint(msg.sender, amount);
     }
 }
