@@ -13,13 +13,19 @@ const DENO_COMMON_PATH =
   "https://raw.githubusercontent.com/yjgaia/contract-module/main/deno/abi/common.ts";
 
 const RELATIONS = {
-  "gaming/MaterialTrade": {
+  /*"gaming/MaterialTrade": {
     "gaiaprotocol-module/src/materialtech/contracts/abi": Env.APP,
     "gaiaprotocol-module/deno/contracts/abi": Env.DENO,
   },
   "gaming/MaterialV1": {
     "gaiaprotocol-module/src/materialtech/contracts/abi": Env.APP,
     "gaiaprotocol-module/deno/contracts/abi": Env.DENO,
+  },*/
+  "token/GaiaProtocolToken": {
+    "token-website/app/contracts/abi": Env.APP,
+  },
+  "token/GaiaProtocolTokenTestnet": {
+    "token-website/app/contracts/abi": Env.APP,
   },
 };
 
