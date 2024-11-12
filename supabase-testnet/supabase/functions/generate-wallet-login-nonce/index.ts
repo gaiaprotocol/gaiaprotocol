@@ -1,8 +1,8 @@
-import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/main/api.ts";
+import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import {
   safeFetchSingle,
   safeStore,
-} from "https://raw.githubusercontent.com/yjgaia/supabase-module/main/deno/supabase.ts";
+} from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
 
 serve(async (req) => {
   const { walletAddress, domain, uri } = await req.json();

@@ -1,5 +1,5 @@
 import { verify } from "https://esm.sh/jsonwebtoken@8.5.1";
-import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/main/api.ts";
+import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
 

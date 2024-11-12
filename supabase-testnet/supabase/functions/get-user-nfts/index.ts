@@ -1,5 +1,5 @@
-import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/main/api.ts";
-import { extractWalletFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/main/deno/auth.ts";
+import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
+import { extractWalletFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
 
 const OPENSEA_API_KEY = Deno.env.get("OPENSEA_API_KEY")!;
 
