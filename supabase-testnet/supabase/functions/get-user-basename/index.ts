@@ -1,9 +1,3 @@
-import {
-  Contract,
-  JsonRpcProvider,
-  namehash,
-  solidityPackedKeccak256,
-} from "https://esm.sh/ethers@6.7.0";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import { extractWalletFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
 

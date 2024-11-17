@@ -1,6 +1,6 @@
-import { verifyMessage } from "https://esm.sh/ethers@6.7.0";
 import { sign } from "https://esm.sh/jsonwebtoken@8.5.1";
-import { SiweMessage } from "https://esm.sh/siwe@2.3.2";
+import { verifyMessage } from "https://esm.sh/viem@2.21.47";
+import { createSiweMessage } from "https://esm.sh/viem@2.21.47/siwe";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import {
   safeFetchSingle,
@@ -24,7 +24,7 @@ serve(async (req) => {
 
   if (!data) throw new Error("Invalid wallet address");
 
-  const message = new SiweMessage({
+  const message = createSiweMessage({
     domain: data.domain,
     address: walletAddress,
     statement: MESSAGE_FOR_WALLET_LOGIN,
@@ -32,16 +32,16 @@ serve(async (req) => {
     version: "1",
     chainId: 1,
     nonce: data.nonce,
-    issuedAt: data.issued_at,
+    issuedAt: new Date(data.issued_at),
   });
 
   // Verify the signed message
-  const verifiedAddress = verifyMessage(
-    message.prepareMessage(),
-    signedMessage,
-  );
-
-  if (walletAddress !== verifiedAddress) throw new Error("Invalid signature");
+  const verified = await verifyMessage({
+    address: walletAddress,
+    message,
+    signature: signedMessage,
+  });
+  if (!verified) throw new Error("Invalid signature");
 
   // Delete the used nonce to prevent replay attacks
   await safeStore(
