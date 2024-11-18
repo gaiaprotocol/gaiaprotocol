@@ -10,7 +10,7 @@ import {
 const MESSAGE_FOR_WALLET_LOGIN = Deno.env.get("MESSAGE_FOR_WALLET_LOGIN")!;
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
 
-serve(async (req) => {
+serve(async (req, ip) => {
   const { walletAddress, signedMessage } = await req.json();
   if (!walletAddress || !signedMessage) throw new Error("Missing parameters");
 
@@ -47,6 +47,21 @@ serve(async (req) => {
   await safeStore(
     "wallet_login_nonces",
     (b) => b.delete().eq("wallet_address", walletAddress),
+  );
+
+  await safeStore(
+    "user_sessions",
+    (b) =>
+      b.insert({
+        wallet_address: walletAddress,
+        ip,
+        real_ip: req.headers.get("x-real-ip"),
+        forwarded_for: req.headers.get("x-forwarded-for"),
+        user_agent: req.headers.get("user-agent"),
+        origin: req.headers.get("origin"),
+        referer: req.headers.get("referer"),
+        accept_language: req.headers.get("accept-language"),
+      }),
   );
 
   // Generate a JWT token for the authenticated user
