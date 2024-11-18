@@ -49,11 +49,15 @@ serve(async (req, ip) => {
     (b) => b.delete().eq("wallet_address", walletAddress),
   );
 
+  // Generate a JWT token for the authenticated user
+  const token = sign({ wallet_address: walletAddress }, JWT_SECRET);
+
   await safeStore(
     "user_sessions",
     (b) =>
       b.insert({
         wallet_address: walletAddress,
+        token,
         ip,
         real_ip: req.headers.get("x-real-ip"),
         forwarded_for: req.headers.get("x-forwarded-for"),
@@ -65,5 +69,5 @@ serve(async (req, ip) => {
   );
 
   // Generate a JWT token for the authenticated user
-  return sign({ wallet_address: walletAddress }, JWT_SECRET);
+  return token;
 });
