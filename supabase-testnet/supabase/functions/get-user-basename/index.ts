@@ -1,5 +1,5 @@
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
-import { extractWalletFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
+import { extractWalletAddressFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
 
 const BASENAME_L2_RESOLVER_ADDRESS =
   "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD";
@@ -40,7 +40,7 @@ function convertReverseNodeToBytes(address: string, chainId: number): string {
 }
 
 serve(async (req) => {
-  const walletAddress = extractWalletFromRequest(req);
+  const walletAddress = extractWalletAddressFromRequest(req);
   const provider = new JsonRpcProvider("https://mainnet.base.org");
   const contract = new Contract(BASENAME_L2_RESOLVER_ADDRESS, ABI, provider);
   const node = convertReverseNodeToBytes(walletAddress, 8453); // Base chainId
