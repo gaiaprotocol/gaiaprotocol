@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.27;
+pragma solidity ^0.8.28;
 
-import "./MaterialV1.sol";
+import "./Material.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using Address for address payable;
 
     address payable public protocolFeeDestination;
@@ -67,7 +67,7 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function createMaterial(string memory name, string memory symbol) public returns (address) {
-        MaterialV1 newMaterial = new MaterialV1(msg.sender, name, symbol);
+        Material newMaterial = new Material(msg.sender, name, symbol);
         emit MaterialCreated(msg.sender, address(newMaterial), name, symbol);
         return address(newMaterial);
     }
@@ -91,12 +91,12 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function getBuyPrice(address materialAddress, uint256 amount) public view returns (uint256) {
-        MaterialV1 material = MaterialV1(materialAddress);
+        Material material = Material(materialAddress);
         return getPrice(material.totalSupply(), amount);
     }
 
     function getSellPrice(address materialAddress, uint256 amount) public view returns (uint256) {
-        MaterialV1 material = MaterialV1(materialAddress);
+        Material material = Material(materialAddress);
         uint256 supplyAfterSale = material.totalSupply() - amount;
         return getPrice(supplyAfterSale, amount);
     }
@@ -116,7 +116,7 @@ contract MaterialTrade is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function executeTrade(address materialAddress, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
-        MaterialV1 material = MaterialV1(materialAddress);
+        Material material = Material(materialAddress);
         uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1e18;
         uint256 protocolFee = (price * protocolFeePercent) / 1e18;
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.27;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-contract MaterialV1 is ERC20Permit, Ownable2Step {
+contract Material is ERC20Permit, Ownable2Step {
     address public immutable materialTrade;
 
     string private _name;
