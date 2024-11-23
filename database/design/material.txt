@@ -1,0 +1,9 @@
+materials
+	chain - text - pk
+	address - text - pk
+	owner - text - not null
+	name - text - not null
+  symbol - text - not null
+	supply - numeric - 0
+	created_at - timestampz - now()
+	updated_at - timestampz - nullable

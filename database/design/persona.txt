@@ -1,0 +1,13 @@
+personas
+	wallet_address - text, ("auth"."jwt"() ->> 'wallet_address'::"text") - pk
+  name - text - nullable
+  is_ens_name - boolean - nullable
+  is_basename - boolean - nullable
+  is_gaia_name - boolean - nullable
+  profile_image_url - text - nullable
+  nft_address - text - nullable
+  nft_token_id - text - nullable
+  bio - text - nullable
+  social_links - string[] - nullable
+	created_at - timestampz - now()
+	updated_at - timestampz - nullable

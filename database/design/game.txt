@@ -1,0 +1,12 @@
+games
+	id - uuid - gen_random_uuid() - pk
+  owner - text, ("auth"."jwt"() ->> 'wallet_address'::"text") - not null
+  name - text - not null
+	created_at - timestampz - now()
+	updated_at - timestampz - nullable
+
+game_materials
+	game - uuid, fk to games(id) - pk
+	chain - text, fk to materials(chain) - pk
+	address - text, fk to materials(address) - pk
+	created_at - timestampz - now()
