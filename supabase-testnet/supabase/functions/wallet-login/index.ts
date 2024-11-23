@@ -1,5 +1,5 @@
 import { sign } from "https://esm.sh/jsonwebtoken@8.5.1";
-import { verifyMessage } from "https://esm.sh/viem@2.21.47";
+import { getAddress, verifyMessage } from "https://esm.sh/viem@2.21.47";
 import { createSiweMessage } from "https://esm.sh/viem@2.21.47/siwe";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import {
@@ -11,8 +11,10 @@ const MESSAGE_FOR_WALLET_LOGIN = Deno.env.get("MESSAGE_FOR_WALLET_LOGIN")!;
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
 
 serve(async (req, ip) => {
-  const { walletAddress, signedMessage } = await req.json();
+  let { walletAddress, signedMessage } = await req.json();
   if (!walletAddress || !signedMessage) throw new Error("Missing parameters");
+
+  walletAddress = getAddress(walletAddress);
 
   // Retrieve the nonce associated with the wallet address
   const data = await safeFetchSingle<
