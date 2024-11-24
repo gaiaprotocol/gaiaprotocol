@@ -23,6 +23,15 @@ interface PersonaEntity {
   social_links?: string[];
 }
 
+const OPENSEA_API_KEY = Deno.env.get("OPENSEA_API_KEY")!;
+
+class APIError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = "APIError";
+  }
+}
+
 function isValidName(name: string): boolean {
   if (!name) return false;
   if (!/^[a-z0-9-]+$/.test(name)) return false;
@@ -45,25 +54,38 @@ serve(async (req) => {
     throw new Error("Invalid wallet address");
   }
 
+  if (personaData.nft_address && personaData.nft_token_id) {
+    const response = await fetch(
+      `https://api.opensea.io/api/v2/chain/ethereum/contract/${personaData.nft_address}/nfts/${personaData.nft_token_id}`,
+      { headers: { "X-API-KEY": OPENSEA_API_KEY } },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new APIError(
+        response.status,
+        `OpenSea API error: ${errorText}`,
+      );
+    }
+
+    const result = await response.json();
+    if (
+      !result.nft.owners.some((owner: any) => owner.address === walletAddress)
+    ) {
+      throw new Error("Invalid NFT ownership");
+    }
+  }
+
   personaData.name = personaData.name?.trim();
   if (!personaData.name) throw new Error("Missing required parameters");
-  if (personaData.name.length > 100) throw new Error("Name is too long");
-  if (!isValidName(personaData.name)) throw new Error("Invalid name");
-  if (personaData.name.includes(".")) {
-    throw new Error("Name cannot contain periods");
-  }
 
   if (personaData.is_ens_name) {
     const ensName = await getEnsName(walletAddress);
     if (ensName !== personaData.name) throw new Error("Invalid ENS name");
-  }
-
-  if (personaData.is_basename) {
+  } else if (personaData.is_basename) {
     const basename = await getBasename(walletAddress);
     if (basename !== personaData.name) throw new Error("Invalid basename");
-  }
-
-  if (personaData.is_gaia_name) {
+  } else if (personaData.is_gaia_name) {
     const { data: gaiaNameData, error } = await godModeSupabase.from(
       "gaia_names",
     ).select("*").eq("name", personaData.name).single();
@@ -72,6 +94,12 @@ serve(async (req) => {
     if (!gaiaNameData) throw new Error("Gaia name not found");
     if (gaiaNameData.wallet_address !== walletAddress) {
       throw new Error("Invalid wallet address");
+    }
+  } else {
+    if (personaData.name.length > 100) throw new Error("Name is too long");
+    if (!isValidName(personaData.name)) throw new Error("Invalid name");
+    if (personaData.name.includes(".")) {
+      throw new Error("Name cannot contain periods");
     }
   }
 

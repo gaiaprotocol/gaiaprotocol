@@ -5,6 +5,7 @@ personas
   is_basename - boolean - nullable
   is_gaia_name - boolean - nullable
   profile_image_url - text - nullable
+  thumbnail_image_url - text - nullable
   nft_address - text - nullable
   nft_token_id - text - nullable
   bio - text - nullable
