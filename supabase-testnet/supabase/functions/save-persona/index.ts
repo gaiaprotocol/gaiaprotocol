@@ -66,6 +66,8 @@ serve(async (req) => {
         response.status,
         `OpenSea API error: ${errorText}`,
       );
+    } else if (personaData.nft_address || personaData.nft_token_id) {
+      throw new Error("Invalid NFT ownership");
     }
 
     const result = await response.json();
@@ -77,29 +79,29 @@ serve(async (req) => {
   }
 
   personaData.name = personaData.name?.trim();
-  if (!personaData.name) throw new Error("Missing required parameters");
+  if (personaData.name) {
+    if (personaData.is_ens_name) {
+      const ensName = await getEnsName(walletAddress);
+      if (ensName !== personaData.name) throw new Error("Invalid ENS name");
+    } else if (personaData.is_basename) {
+      const basename = await getBasename(walletAddress);
+      if (basename !== personaData.name) throw new Error("Invalid basename");
+    } else if (personaData.is_gaia_name) {
+      const { data: gaiaNameData, error } = await godModeSupabase.from(
+        "gaia_names",
+      ).select("*").eq("name", personaData.name).single();
+      if (error) throw error;
 
-  if (personaData.is_ens_name) {
-    const ensName = await getEnsName(walletAddress);
-    if (ensName !== personaData.name) throw new Error("Invalid ENS name");
-  } else if (personaData.is_basename) {
-    const basename = await getBasename(walletAddress);
-    if (basename !== personaData.name) throw new Error("Invalid basename");
-  } else if (personaData.is_gaia_name) {
-    const { data: gaiaNameData, error } = await godModeSupabase.from(
-      "gaia_names",
-    ).select("*").eq("name", personaData.name).single();
-    if (error) throw error;
-
-    if (!gaiaNameData) throw new Error("Gaia name not found");
-    if (gaiaNameData.wallet_address !== walletAddress) {
-      throw new Error("Invalid wallet address");
-    }
-  } else {
-    if (personaData.name.length > 100) throw new Error("Name is too long");
-    if (!isValidName(personaData.name)) throw new Error("Invalid name");
-    if (personaData.name.includes(".")) {
-      throw new Error("Name cannot contain periods");
+      if (!gaiaNameData) throw new Error("Gaia name not found");
+      if (gaiaNameData.wallet_address !== walletAddress) {
+        throw new Error("Invalid wallet address");
+      }
+    } else {
+      if (personaData.name.length > 100) throw new Error("Name is too long");
+      if (!isValidName(personaData.name)) throw new Error("Invalid name");
+      if (personaData.name.includes(".")) {
+        throw new Error("Name cannot contain periods");
+      }
     }
   }
 
