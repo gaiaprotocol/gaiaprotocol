@@ -9,7 +9,7 @@ serve(async (req) => {
 
   // Verify the token using the secret
   const decoded = verify(token, JWT_SECRET) as
-    | { wallet_address?: string }
+    | { wallet_address?: `0x${string}` }
     | undefined;
   if (!decoded?.wallet_address) throw new Error("Invalid token");
 

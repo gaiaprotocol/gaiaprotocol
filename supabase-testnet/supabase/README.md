@@ -9,7 +9,8 @@ supabase functions deploy verify-wallet-login-token
 supabase functions deploy upload-profile-image
 
 supabase functions deploy get-user-nfts
-supabase functions deploy get-user-ens-names
-supabase functions deploy get-user-basenames
-supabase functions deploy get-user-gaia-names
+supabase functions deploy get-user-ens-name
+supabase functions deploy get-user-basename
+
+supabase functions deploy save-persona
 ```

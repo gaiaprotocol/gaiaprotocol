@@ -2,6 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.31.0";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import { safeStore } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
 import { extractWalletAddressFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
+import { getBasename } from "../_shared/basename.ts";
+import { getEnsName } from "../_shared/ens.ts";
 
 interface PersonaEntity {
   wallet_address: string;
@@ -52,11 +54,13 @@ serve(async (req) => {
   }
 
   if (personaData.is_ens_name) {
-    //TODO:
+    const ensName = await getEnsName(walletAddress);
+    if (ensName !== personaData.name) throw new Error("Invalid ENS name");
   }
 
   if (personaData.is_basename) {
-    //TODO:
+    const basename = await getBasename(walletAddress);
+    if (basename !== personaData.name) throw new Error("Invalid basename");
   }
 
   if (personaData.is_gaia_name) {
