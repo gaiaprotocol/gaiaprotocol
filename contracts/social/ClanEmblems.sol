@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "./HoldingRewardsBase.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-contract ClanEmblems is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract ClanEmblems is HoldingRewardsBase {
     using Address for address payable;
 
-    uint256 public priceIncrement;
-    uint256 public protocolFeePercent;
-    uint256 public clanFeePercent;
-    address payable public protocolFeeDestination;
+    uint256 public priceIncrementPerEmblem;
+    uint256 public clanFeeRate;
 
     struct Clan {
         address owner;
@@ -23,9 +20,7 @@ contract ClanEmblems is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     mapping(uint256 => mapping(address => uint256)) public balance;
     mapping(uint256 => uint256) public supply;
 
-    event SetProtocolFeeDestination(address indexed destination);
-    event SetProtocolFeePercent(uint256 percent);
-    event SetClanFeePercent(uint256 percent);
+    event ClanFeeRateUpdated(uint256 rate);
     event ClanCreated(uint256 indexed clanId, address indexed owner);
     event ClanDeleted(uint256 indexed clanId);
     event ClanOwnershipTransferred(uint256 indexed clanId, address indexed previousOwner, address indexed newOwner);
@@ -38,41 +33,41 @@ contract ClanEmblems is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 price,
         uint256 protocolFee,
         uint256 clanFee,
+        uint256 holdingReward,
         uint256 supply
     );
 
     function initialize(
-        address payable _protocolFeeDestination,
-        uint256 _protocolFeePercent,
-        uint256 _clanFeePercent,
-        uint256 _priceIncrementPerEmblem
+        address payable _treasury,
+        uint256 _protocolFeeRate,
+        uint256 _clanFeeRate,
+        uint256 _priceIncrementPerEmblem,
+        uint256 _baseDivider,
+        address _holdingVerifier
     ) public initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 
-        protocolFeeDestination = _protocolFeeDestination;
-        protocolFeePercent = _protocolFeePercent;
-        clanFeePercent = _clanFeePercent;
-        priceIncrement = _priceIncrementPerEmblem;
+        require(_treasury != address(0), "Invalid treasury");
+        require(_holdingVerifier != address(0), "Invalid verifier");
 
-        emit SetProtocolFeeDestination(_protocolFeeDestination);
-        emit SetProtocolFeePercent(_protocolFeePercent);
-        emit SetClanFeePercent(_clanFeePercent);
+        treasury = _treasury;
+        protocolFeeRate = _protocolFeeRate;
+        clanFeeRate = _clanFeeRate;
+        priceIncrementPerEmblem = _priceIncrementPerEmblem;
+        baseDivider = _baseDivider;
+        holdingVerifier = _holdingVerifier;
+
+        emit TreasuryUpdated(_treasury);
+        emit ProtocolFeeRateUpdated(_protocolFeeRate);
+        emit ClanFeeRateUpdated(_clanFeeRate);
+        emit HoldingVerifierUpdated(_holdingVerifier);
     }
 
-    function setProtocolFeeDestination(address payable _feeDestination) external onlyOwner {
-        protocolFeeDestination = _feeDestination;
-        emit SetProtocolFeeDestination(_feeDestination);
-    }
-
-    function setProtocolFeePercent(uint256 _feePercent) external onlyOwner {
-        protocolFeePercent = _feePercent;
-        emit SetProtocolFeePercent(_feePercent);
-    }
-
-    function setClanFeePercent(uint256 _feePercent) external onlyOwner {
-        clanFeePercent = _feePercent;
-        emit SetClanFeePercent(_feePercent);
+    function setClanFeeRate(uint256 _rate) external onlyOwner {
+        require(_rate <= 1 ether, "Fee rate exceeds maximum");
+        clanFeeRate = _rate;
+        emit ClanFeeRateUpdated(_rate);
     }
 
     function createClan() external returns (uint256 clanId) {
@@ -108,9 +103,9 @@ contract ClanEmblems is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrement + (_supply * priceIncrement);
+        uint256 startPriceWei = priceIncrementPerEmblem + (_supply * priceIncrementPerEmblem);
         uint256 endSupply = _supply + amount;
-        uint256 endPriceWei = priceIncrement + (endSupply * priceIncrement);
+        uint256 endPriceWei = priceIncrementPerEmblem + (endSupply * priceIncrementPerEmblem);
         uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
         uint256 totalCostWei = averagePriceWei * amount;
         return totalCostWei;
@@ -127,53 +122,59 @@ contract ClanEmblems is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function getBuyPriceAfterFee(uint256 clanId, uint256 amount) external view returns (uint256) {
         uint256 price = getBuyPrice(clanId, amount);
-        uint256 protocolFee = (price * protocolFeePercent) / 1 ether;
-        uint256 clanFee = (price * clanFeePercent) / 1 ether;
+        uint256 protocolFee = ((price * protocolFeeRate) / 1 ether);
+        uint256 clanFee = ((price * clanFeeRate) / 1 ether);
         return price + protocolFee + clanFee;
     }
 
     function getSellPriceAfterFee(uint256 clanId, uint256 amount) external view returns (uint256) {
         uint256 price = getSellPrice(clanId, amount);
-        uint256 protocolFee = (price * protocolFeePercent) / 1 ether;
-        uint256 clanFee = (price * clanFeePercent) / 1 ether;
+        uint256 protocolFee = ((price * protocolFeeRate) / 1 ether);
+        uint256 clanFee = ((price * clanFeeRate) / 1 ether);
         return price - protocolFee - clanFee;
     }
 
-    function executeTrade(uint256 clanId, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
+    function executeTrade(
+        uint256 clanId,
+        uint256 amount,
+        uint256 price,
+        bool isBuy,
+        bytes memory holdingPointsSignature
+    ) private nonReentrant {
         require(clans[clanId].owner != address(0), "Clan does not exist");
-        uint256 protocolFee = (price * protocolFeePercent) / 1 ether;
-        uint256 clanFee = (price * clanFeePercent) / 1 ether;
+
+        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingPointsSignature);
+        uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
+        uint256 clanFee = ((price * clanFeeRate) / 1 ether) + holdingReward;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + clanFee, "Insufficient payment");
             balance[clanId][msg.sender] += amount;
             supply[clanId] += amount;
-            protocolFeeDestination.sendValue(protocolFee);
+            treasury.sendValue(protocolFee);
             clans[clanId].accumulatedFees += clanFee;
             if (msg.value > price + protocolFee + clanFee) {
-                uint256 refund = msg.value - price - protocolFee - clanFee;
-                payable(msg.sender).sendValue(refund);
+                payable(msg.sender).sendValue(msg.value - price - protocolFee - clanFee);
             }
         } else {
             require(balance[clanId][msg.sender] >= amount, "Insufficient balance");
             balance[clanId][msg.sender] -= amount;
             supply[clanId] -= amount;
-            uint256 netAmount = price - protocolFee - clanFee;
-            payable(msg.sender).sendValue(netAmount);
-            protocolFeeDestination.sendValue(protocolFee);
+            payable(msg.sender).sendValue(price - protocolFee - clanFee);
+            treasury.sendValue(protocolFee);
             clans[clanId].accumulatedFees += clanFee;
         }
 
-        emit Trade(msg.sender, clanId, isBuy, amount, price, protocolFee, clanFee, supply[clanId]);
+        emit Trade(msg.sender, clanId, isBuy, amount, price, protocolFee, clanFee, holdingReward, supply[clanId]);
     }
 
-    function buy(uint256 clanId, uint256 amount) external payable {
+    function buy(uint256 clanId, uint256 amount, bytes memory holdingPointsSignature) external payable {
         uint256 price = getBuyPrice(clanId, amount);
-        executeTrade(clanId, amount, price, true);
+        executeTrade(clanId, amount, price, true, holdingPointsSignature);
     }
 
-    function sell(uint256 clanId, uint256 amount) external {
+    function sell(uint256 clanId, uint256 amount, bytes memory holdingPointsSignature) external {
         uint256 price = getSellPrice(clanId, amount);
-        executeTrade(clanId, amount, price, false);
+        executeTrade(clanId, amount, price, false, holdingPointsSignature);
     }
 }

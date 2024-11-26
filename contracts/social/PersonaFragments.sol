@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 contract PersonaFragments is HoldingRewardsBase {
     using Address for address payable;
 
-    uint256 public priceIncrement;
+    uint256 public priceIncrementPerFragment;
     uint256 public personaFeeRate;
 
     mapping(address => mapping(address => uint256)) public balance;
@@ -43,7 +43,7 @@ contract PersonaFragments is HoldingRewardsBase {
         treasury = _treasury;
         protocolFeeRate = _protocolFeeRate;
         personaFeeRate = _personaFeeRate;
-        priceIncrement = _priceIncrementPerFragment;
+        priceIncrementPerFragment = _priceIncrementPerFragment;
         baseDivider = _baseDivider;
         holdingVerifier = _holdingVerifier;
 
@@ -60,9 +60,9 @@ contract PersonaFragments is HoldingRewardsBase {
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrement + (_supply * priceIncrement);
+        uint256 startPriceWei = priceIncrementPerFragment + (_supply * priceIncrementPerFragment);
         uint256 endSupply = _supply + amount;
-        uint256 endPriceWei = priceIncrement + (endSupply * priceIncrement);
+        uint256 endPriceWei = priceIncrementPerFragment + (endSupply * priceIncrementPerFragment);
         uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
         uint256 totalCostWei = averagePriceWei * amount;
         return totalCostWei;

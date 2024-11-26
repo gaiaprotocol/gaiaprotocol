@@ -37,32 +37,32 @@ abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgra
         emit HoldingVerifierUpdated(_verifier);
     }
 
-    function parseHoldingPoints(
+    function parseRewardRatio(
         bytes memory signature
-    ) internal pure returns (uint256 holdingPoints, bytes32 originalHash) {
+    ) internal pure returns (uint256 rewardRatio, bytes32 originalHash) {
         require(signature.length == 96, "Invalid signature length");
 
         assembly {
-            holdingPoints := mload(add(signature, 32))
+            rewardRatio := mload(add(signature, 32))
             originalHash := mload(add(signature, 64))
         }
 
-        require(holdingPoints <= 1 ether, "Holding points too high");
-        return (holdingPoints, originalHash);
+        require(rewardRatio <= 1 ether, "Reward ratio too high");
+        return (rewardRatio, originalHash);
     }
 
     function calculateHoldingReward(uint256 baseAmount, bytes memory signature) public view returns (uint256) {
         if (signature.length == 0) return 0;
 
-        (uint256 holdingPoints, bytes32 originalHash) = parseHoldingPoints(signature);
+        (uint256 rewardRatio, bytes32 originalHash) = parseRewardRatio(signature);
 
-        bytes32 hash = keccak256(abi.encodePacked(baseAmount, holdingPoints));
+        bytes32 hash = keccak256(abi.encodePacked(baseAmount, rewardRatio));
         bytes32 ethSignedHash = hash.toEthSignedMessageHash();
         require(originalHash == ethSignedHash, "Invalid signature data");
 
         address signer = ethSignedHash.recover(signature);
         require(signer == holdingVerifier, "Invalid verifier");
 
-        return (baseAmount * holdingPoints) / 1 ether;
+        return (baseAmount * rewardRatio) / 1 ether;
     }
 }
