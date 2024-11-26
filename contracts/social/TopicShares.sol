@@ -102,9 +102,9 @@ contract TopicShares is HoldingRewardsBase {
         return price - protocolFee - holderFee;
     }
 
-    function buy(bytes32 topic, uint256 amount, bytes memory holdingPointsSignature) external payable nonReentrant {
+    function buy(bytes32 topic, uint256 amount, bytes memory holdingRewardSignature) external payable nonReentrant {
         uint256 price = getBuyPrice(topic, amount);
-        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingPointsSignature);
+        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingRewardSignature);
         uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
         uint256 holderFee = ((price * holderFeeRate) / 1 ether) + holdingReward;
 
@@ -128,9 +128,9 @@ contract TopicShares is HoldingRewardsBase {
         emit Trade(msg.sender, topic, true, amount, price, protocolFee, holderFee, holdingReward, t.supply);
     }
 
-    function sell(bytes32 topic, uint256 amount, bytes memory holdingPointsSignature) external nonReentrant {
+    function sell(bytes32 topic, uint256 amount, bytes memory holdingRewardSignature) external nonReentrant {
         uint256 price = getSellPrice(topic, amount);
-        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingPointsSignature);
+        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingRewardSignature);
         uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
         uint256 holderFee = ((price * holderFeeRate) / 1 ether) + holdingReward;
 

@@ -96,9 +96,9 @@ contract PersonaFragments is HoldingRewardsBase {
         uint256 amount,
         uint256 price,
         bool isBuy,
-        bytes memory holdingPointsSignature
+        bytes memory holdingRewardSignature
     ) private nonReentrant {
-        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingPointsSignature);
+        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingRewardSignature);
         uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
         uint256 personaFee = ((price * personaFeeRate) / 1 ether) + holdingReward;
 
@@ -123,13 +123,13 @@ contract PersonaFragments is HoldingRewardsBase {
         emit Trade(msg.sender, persona, isBuy, amount, price, protocolFee, personaFee, holdingReward, supply[persona]);
     }
 
-    function buy(address persona, uint256 amount, bytes memory holdingPointsSignature) external payable {
+    function buy(address persona, uint256 amount, bytes memory holdingRewardSignature) external payable {
         uint256 price = getBuyPrice(persona, amount);
-        executeTrade(persona, amount, price, true, holdingPointsSignature);
+        executeTrade(persona, amount, price, true, holdingRewardSignature);
     }
 
-    function sell(address persona, uint256 amount, bytes memory holdingPointsSignature) external {
+    function sell(address persona, uint256 amount, bytes memory holdingRewardSignature) external {
         uint256 price = getSellPrice(persona, amount);
-        executeTrade(persona, amount, price, false, holdingPointsSignature);
+        executeTrade(persona, amount, price, false, holdingRewardSignature);
     }
 }
