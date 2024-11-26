@@ -1,24 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "./HoldingRewardsBase.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-contract PersonaFragments is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract PersonaFragments is HoldingRewardsBase {
     using Address for address payable;
 
     uint256 public priceIncrement;
-    uint256 public protocolFeePercent;
-    uint256 public personaOwnerFeePercent;
-    address payable public protocolFeeDestination;
+    uint256 public personaFeeRate;
 
     mapping(address => mapping(address => uint256)) public balance;
     mapping(address => uint256) public supply;
 
-    event SetProtocolFeeDestination(address indexed destination);
-    event SetProtocolFeePercent(uint256 percent);
-    event SetPersonaOwnerFeePercent(uint256 percent);
+    event PersonaFeeRateUpdated(uint256 rate);
     event Trade(
         address indexed trader,
         address indexed persona,
@@ -26,53 +21,50 @@ contract PersonaFragments is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 amount,
         uint256 price,
         uint256 protocolFee,
-        uint256 personaOwnerFee,
+        uint256 personaFee,
+        uint256 holdingReward,
         uint256 supply
     );
 
     function initialize(
-        address payable _protocolFeeDestination,
-        uint256 _protocolFeePercent,
-        uint256 _personaOwnerFeePercent,
-        uint256 _priceIncrementPerFragment
+        address payable _treasury,
+        uint256 _protocolFeeRate,
+        uint256 _personaFeeRate,
+        uint256 _priceIncrementPerFragment,
+        uint256 _baseDivider,
+        address _holdingVerifier
     ) public initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 
-        protocolFeeDestination = _protocolFeeDestination;
-        protocolFeePercent = _protocolFeePercent;
-        personaOwnerFeePercent = _personaOwnerFeePercent;
+        require(_treasury != address(0), "Invalid treasury");
+        require(_holdingVerifier != address(0), "Invalid verifier");
+
+        treasury = _treasury;
+        protocolFeeRate = _protocolFeeRate;
+        personaFeeRate = _personaFeeRate;
         priceIncrement = _priceIncrementPerFragment;
+        baseDivider = _baseDivider;
+        holdingVerifier = _holdingVerifier;
 
-        emit SetProtocolFeeDestination(_protocolFeeDestination);
-        emit SetProtocolFeePercent(_protocolFeePercent);
-        emit SetPersonaOwnerFeePercent(_personaOwnerFeePercent);
+        emit TreasuryUpdated(_treasury);
+        emit ProtocolFeeRateUpdated(_protocolFeeRate);
+        emit PersonaFeeRateUpdated(_personaFeeRate);
+        emit HoldingVerifierUpdated(_holdingVerifier);
     }
 
-    function setProtocolFeeDestination(address payable _feeDestination) public onlyOwner {
-        protocolFeeDestination = _feeDestination;
-        emit SetProtocolFeeDestination(_feeDestination);
-    }
-
-    function setProtocolFeePercent(uint256 _feePercent) public onlyOwner {
-        protocolFeePercent = _feePercent;
-        emit SetProtocolFeePercent(_feePercent);
-    }
-
-    function setPersonaOwnerFeePercent(uint256 _feePercent) public onlyOwner {
-        personaOwnerFeePercent = _feePercent;
-        emit SetPersonaOwnerFeePercent(_feePercent);
+    function setPersonaFeeRate(uint256 _rate) external onlyOwner {
+        require(_rate <= 1 ether, "Fee rate exceeds maximum");
+        personaFeeRate = _rate;
+        emit PersonaFeeRateUpdated(_rate);
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
         uint256 startPriceWei = priceIncrement + (_supply * priceIncrement);
-
         uint256 endSupply = _supply + amount;
         uint256 endPriceWei = priceIncrement + (endSupply * priceIncrement);
-
         uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
         uint256 totalCostWei = averagePriceWei * amount;
-
         return totalCostWei;
     }
 
@@ -87,52 +79,57 @@ contract PersonaFragments is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function getBuyPriceAfterFee(address persona, uint256 amount) external view returns (uint256) {
         uint256 price = getBuyPrice(persona, amount);
-        uint256 protocolFee = (price * protocolFeePercent) / 1e18;
-        uint256 personaOwnerFee = (price * personaOwnerFeePercent) / 1e18;
-        return price + protocolFee + personaOwnerFee;
+        uint256 protocolFee = (price * protocolFeeRate) / 1 ether;
+        uint256 personaFee = (price * personaFeeRate) / 1 ether;
+        return price + protocolFee + personaFee;
     }
 
     function getSellPriceAfterFee(address persona, uint256 amount) external view returns (uint256) {
         uint256 price = getSellPrice(persona, amount);
-        uint256 protocolFee = (price * protocolFeePercent) / 1e18;
-        uint256 personaOwnerFee = (price * personaOwnerFeePercent) / 1e18;
-        return price - protocolFee - personaOwnerFee;
+        uint256 protocolFee = (price * protocolFeeRate) / 1 ether;
+        uint256 personaFee = (price * personaFeeRate) / 1 ether;
+        return price - protocolFee - personaFee;
     }
 
-    function executeTrade(address persona, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
-        uint256 protocolFee = (price * protocolFeePercent) / 1e18;
-        uint256 personaOwnerFee = (price * personaOwnerFeePercent) / 1e18;
+    function executeTrade(
+        address persona,
+        uint256 amount,
+        uint256 price,
+        bool isBuy,
+        bytes memory holdingPointsSignature
+    ) private nonReentrant {
+        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingPointsSignature);
+        uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
+        uint256 personaFee = ((price * personaFeeRate) / 1 ether) + holdingReward;
 
         if (isBuy) {
-            require(msg.value >= price + protocolFee + personaOwnerFee, "Insufficient payment");
+            require(msg.value >= price + protocolFee + personaFee, "Insufficient payment");
             balance[persona][msg.sender] += amount;
             supply[persona] += amount;
-            protocolFeeDestination.sendValue(protocolFee);
-            payable(persona).sendValue(personaOwnerFee);
-            if (msg.value > price + protocolFee + personaOwnerFee) {
-                uint256 refund = msg.value - price - protocolFee - personaOwnerFee;
-                payable(msg.sender).sendValue(refund);
+            treasury.sendValue(protocolFee);
+            payable(persona).sendValue(personaFee);
+            if (msg.value > price + protocolFee + personaFee) {
+                payable(msg.sender).sendValue(msg.value - price - protocolFee - personaFee);
             }
         } else {
             require(balance[persona][msg.sender] >= amount, "Insufficient balance");
             balance[persona][msg.sender] -= amount;
             supply[persona] -= amount;
-            uint256 netAmount = price - protocolFee - personaOwnerFee;
-            payable(msg.sender).sendValue(netAmount);
-            protocolFeeDestination.sendValue(protocolFee);
-            payable(persona).sendValue(personaOwnerFee);
+            payable(msg.sender).sendValue(price - protocolFee - personaFee);
+            treasury.sendValue(protocolFee);
+            payable(persona).sendValue(personaFee);
         }
 
-        emit Trade(msg.sender, persona, isBuy, amount, price, protocolFee, personaOwnerFee, supply[persona]);
+        emit Trade(msg.sender, persona, isBuy, amount, price, protocolFee, personaFee, holdingReward, supply[persona]);
     }
 
-    function buy(address persona, uint256 amount) external payable {
+    function buy(address persona, uint256 amount, bytes memory holdingPointsSignature) external payable {
         uint256 price = getBuyPrice(persona, amount);
-        executeTrade(persona, amount, price, true);
+        executeTrade(persona, amount, price, true, holdingPointsSignature);
     }
 
-    function sell(address persona, uint256 amount) external {
+    function sell(address persona, uint256 amount, bytes memory holdingPointsSignature) external {
         uint256 price = getSellPrice(persona, amount);
-        executeTrade(persona, amount, price, false);
+        executeTrade(persona, amount, price, false, holdingPointsSignature);
     }
 }
