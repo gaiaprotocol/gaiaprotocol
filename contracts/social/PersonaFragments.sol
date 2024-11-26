@@ -65,19 +65,13 @@ contract PersonaFragments is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrement + (_supply * priceIncrement) / 1e18;
+        uint256 startPriceWei = priceIncrement + (_supply * priceIncrement);
 
         uint256 endSupply = _supply + amount;
-        if (endSupply >= 1e18) {
-            endSupply -= 1e18;
-        } else {
-            endSupply = 0;
-        }
-
-        uint256 endPriceWei = priceIncrement + (endSupply * priceIncrement) / 1e18;
+        uint256 endPriceWei = priceIncrement + (endSupply * priceIncrement);
 
         uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
-        uint256 totalCostWei = (averagePriceWei * amount) / 1e18;
+        uint256 totalCostWei = averagePriceWei * amount;
 
         return totalCostWei;
     }
@@ -106,8 +100,8 @@ contract PersonaFragments is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function executeTrade(address persona, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
-        uint256 personaOwnerFee = (price * personaOwnerFeePercent) / 1e18;
         uint256 protocolFee = (price * protocolFeePercent) / 1e18;
+        uint256 personaOwnerFee = (price * personaOwnerFeePercent) / 1e18;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + personaOwnerFee, "Insufficient payment");

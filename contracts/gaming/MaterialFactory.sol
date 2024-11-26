@@ -117,8 +117,8 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function executeTrade(address materialAddress, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
         Material material = Material(materialAddress);
-        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1e18;
         uint256 protocolFee = (price * protocolFeePercent) / 1e18;
+        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1e18;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + materialOwnerFee, "Insufficient payment");
