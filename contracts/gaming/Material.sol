@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 contract Material is ERC20Permit, Ownable2Step {
-    address public immutable materialTrade;
+    address public immutable factory;
 
     string private _name;
     string private _symbol;
@@ -22,7 +22,7 @@ contract Material is ERC20Permit, Ownable2Step {
         string memory name_,
         string memory symbol_
     ) ERC20Permit("Material") ERC20("", "") Ownable(owner_) {
-        materialTrade = msg.sender;
+        factory = msg.sender;
         _name = name_;
         _symbol = symbol_;
 
@@ -49,7 +49,7 @@ contract Material is ERC20Permit, Ownable2Step {
     }
 
     modifier onlyMaterialTrade() {
-        require(msg.sender == materialTrade, "Material: caller is not the material trade");
+        require(msg.sender == factory, "Material: caller is not the factory");
         _;
     }
 

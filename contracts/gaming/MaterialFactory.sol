@@ -10,10 +10,10 @@ import "@openzeppelin/contracts/utils/Address.sol";
 contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using Address for address payable;
 
-    address payable public protocolFeeDestination;
+    uint256 public priceIncrement;
     uint256 public protocolFeePercent;
     uint256 public materialOwnerFeePercent;
-    uint256 public priceIncrementPerToken;
+    address payable public protocolFeeDestination;
 
     event SetProtocolFeeDestination(address indexed destination);
     event SetProtocolFeePercent(uint256 percent);
@@ -44,7 +44,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         protocolFeeDestination = _protocolFeeDestination;
         protocolFeePercent = _protocolFeePercent;
         materialOwnerFeePercent = _materialOwnerFeePercent;
-        priceIncrementPerToken = _priceIncrementPerToken;
+        priceIncrement = _priceIncrementPerToken;
 
         emit SetProtocolFeeDestination(_protocolFeeDestination);
         emit SetProtocolFeePercent(_protocolFeePercent);
@@ -73,7 +73,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function getPrice(uint256 supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrementPerToken + (supply * priceIncrementPerToken) / 1e18;
+        uint256 startPriceWei = priceIncrement + (supply * priceIncrement) / 1e18;
 
         uint256 endSupply = supply + amount;
         if (endSupply >= 1e18) {
@@ -82,7 +82,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             endSupply = 0;
         }
 
-        uint256 endPriceWei = priceIncrementPerToken + (endSupply * priceIncrementPerToken) / 1e18;
+        uint256 endPriceWei = priceIncrement + (endSupply * priceIncrement) / 1e18;
 
         uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
         uint256 totalCostWei = (averagePriceWei * amount) / 1e18;
