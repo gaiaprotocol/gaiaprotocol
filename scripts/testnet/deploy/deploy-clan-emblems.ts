@@ -1,18 +1,20 @@
 import { ethers, network, upgrades } from "hardhat";
+import "dotenv/config";
 
 async function main() {
-  const MaterialTrade = await ethers.getContractFactory("MaterialTrade");
-  console.log("Deploying MaterialTrade to ", network.name);
+  const ClanEmblems = await ethers.getContractFactory("ClanEmblems");
+  console.log("Deploying ClanEmblems to", network.name);
 
   const [account1] = await ethers.getSigners();
 
   const contract = await upgrades.deployProxy(
-    MaterialTrade,
+    ClanEmblems,
     [
       account1.address,
       25000000000000000n,
       25000000000000000n,
       1000000000000000n,
+      process.env.HOLDING_VERIFIER_ADDRESS,
     ],
     {
       initializer: "initialize",
@@ -21,7 +23,7 @@ async function main() {
   );
   await contract.waitForDeployment();
 
-  console.log("MaterialTrade deployed to:", contract.target);
+  console.log("ClanEmblems deployed to:", contract.target);
 }
 
 main()

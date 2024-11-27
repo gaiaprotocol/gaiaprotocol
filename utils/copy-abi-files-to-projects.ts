@@ -3,10 +3,25 @@ import path from "path";
 
 const DESTINATIONS = {
   "token/GaiaProtocolToken": [
-    "token-website/app/contracts/abi",
+    "token-website/app/contracts/artifacts",
   ],
   "token/GaiaProtocolTokenTestnet": [
-    "token-website/app/contracts/abi",
+    "token-website/app/contracts/artifacts",
+  ],
+  "social/PersonaFragments": [
+    "gaiaprotocol-module/src/persona/contracts/artifacts",
+  ],
+  "social/ClanEmblems": [
+    "gaiaprotocol-module/src/clan/contracts/artifacts",
+  ],
+  "social/TopicShares": [
+    "gaiaprotocol-module/src/topic/contracts/artifacts",
+  ],
+  "gaming/Material": [
+    "gaiaprotocol-module/src/material/contracts/artifacts",
+  ],
+  "gaming/MaterialFactory": [
+    "gaiaprotocol-module/src/material/contracts/artifacts",
   ],
 };
 

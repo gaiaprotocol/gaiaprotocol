@@ -42,7 +42,6 @@ contract ClanEmblems is HoldingRewardsBase {
         uint256 _protocolFeeRate,
         uint256 _clanFeeRate,
         uint256 _priceIncrementPerEmblem,
-        uint256 _baseDivider,
         address _holdingVerifier
     ) public initializer {
         __Ownable_init(msg.sender);
@@ -55,7 +54,6 @@ contract ClanEmblems is HoldingRewardsBase {
         protocolFeeRate = _protocolFeeRate;
         clanFeeRate = _clanFeeRate;
         priceIncrementPerEmblem = _priceIncrementPerEmblem;
-        baseDivider = _baseDivider;
         holdingVerifier = _holdingVerifier;
 
         emit TreasuryUpdated(_treasury);

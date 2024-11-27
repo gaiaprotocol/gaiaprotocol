@@ -43,7 +43,6 @@ contract TopicShares is HoldingRewardsBase {
         uint256 _protocolFeeRate,
         uint256 _holderFeeRate,
         uint256 _priceIncrementPerShare,
-        uint256 _baseDivider,
         address _holdingVerifier
     ) public initializer {
         __Ownable_init(msg.sender);
@@ -56,7 +55,6 @@ contract TopicShares is HoldingRewardsBase {
         protocolFeeRate = _protocolFeeRate;
         holderFeeRate = _holderFeeRate;
         priceIncrementPerShare = _priceIncrementPerShare;
-        baseDivider = _baseDivider;
         holdingVerifier = _holdingVerifier;
 
         emit TreasuryUpdated(_treasury);

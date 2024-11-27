@@ -10,7 +10,6 @@ abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgra
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
-    uint256 internal baseDivider;
     address payable public treasury;
     uint256 public protocolFeeRate;
     address public holdingVerifier;

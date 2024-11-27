@@ -31,7 +31,6 @@ contract PersonaFragments is HoldingRewardsBase {
         uint256 _protocolFeeRate,
         uint256 _personaOwnerFeeRate,
         uint256 _priceIncrementPerFragment,
-        uint256 _baseDivider,
         address _holdingVerifier
     ) public initializer {
         __Ownable_init(msg.sender);
@@ -44,7 +43,6 @@ contract PersonaFragments is HoldingRewardsBase {
         protocolFeeRate = _protocolFeeRate;
         personaOwnerFeeRate = _personaOwnerFeeRate;
         priceIncrementPerFragment = _priceIncrementPerFragment;
-        baseDivider = _baseDivider;
         holdingVerifier = _holdingVerifier;
 
         emit TreasuryUpdated(_treasury);
