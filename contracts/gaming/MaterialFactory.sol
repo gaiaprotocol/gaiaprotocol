@@ -74,19 +74,10 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function getPrice(uint256 supply, uint256 amount) public view returns (uint256) {
         uint256 startPriceWei = priceIncrement + (supply * priceIncrement) / 1e18;
-
         uint256 endSupply = supply + amount;
-        if (endSupply >= 1e18) {
-            endSupply -= 1e18;
-        } else {
-            endSupply = 0;
-        }
-
         uint256 endPriceWei = priceIncrement + (endSupply * priceIncrement) / 1e18;
-
         uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
         uint256 totalCostWei = (averagePriceWei * amount) / 1e18;
-
         return totalCostWei;
     }
 
