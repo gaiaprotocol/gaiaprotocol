@@ -18,7 +18,13 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     event TreasuryUpdated(address indexed treasury);
     event ProtocolFeeRateUpdated(uint256 rate);
     event MaterialOwnerFeeRateUpdated(uint256 rate);
-    event MaterialCreated(address indexed materialOwner, address indexed materialAddress, string name, string symbol);
+    event MaterialCreated(
+        address indexed materialOwner,
+        address indexed materialAddress,
+        string name,
+        string symbol,
+        bytes32 metadataHash
+    );
     event TradeExecuted(
         address indexed trader,
         address indexed materialAddress,
@@ -67,9 +73,9 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         emit MaterialOwnerFeeRateUpdated(_rate);
     }
 
-    function createMaterial(string memory name, string memory symbol) public returns (address) {
+    function createMaterial(string memory name, string memory symbol, bytes32 metadataHash) public returns (address) {
         Material newMaterial = new Material(msg.sender, name, symbol);
-        emit MaterialCreated(msg.sender, address(newMaterial), name, symbol);
+        emit MaterialCreated(msg.sender, address(newMaterial), name, symbol, metadataHash);
         return address(newMaterial);
     }
 

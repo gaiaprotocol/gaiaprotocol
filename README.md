@@ -14,7 +14,7 @@ node --loader ts-node/esm ./copy-abi-files-to-projects.ts
 ## Clan Emblems
 
 - Base Sepoila:
-  [0x5d8Be8c1531b4749Ba804232007293ff8335600d](https://sepolia.basescan.org/address/0x5d8Be8c1531b4749Ba804232007293ff8335600d#code)
+  [0x9322C4A5E5725262C9960aDE87259d1cE2812412](https://sepolia.basescan.org/address/0x9322C4A5E5725262C9960aDE87259d1cE2812412#code)
 
 ## Topic Shares
 
@@ -24,5 +24,5 @@ node --loader ts-node/esm ./copy-abi-files-to-projects.ts
 ## Material Factory
 
 - Base Sepoila:
-  [0xFf0Ec0eb0563D32Aa405186248B8C62B1C2A649b](https://sepolia.basescan.org/address/0xFf0Ec0eb0563D32Aa405186248B8C62B1C2A649b#code)
+  [0xc78c189C24379857A80635624877E02306de3EE1](https://sepolia.basescan.org/address/0xc78c189C24379857A80635624877E02306de3EE1#code)
 

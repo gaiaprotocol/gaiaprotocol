@@ -48,16 +48,16 @@ contract Material is ERC20Permit, Ownable2Step {
         emit SymbolSet(symbol_);
     }
 
-    modifier onlyMaterialTrade() {
+    modifier onlyFactory() {
         require(msg.sender == factory, "Material: caller is not the factory");
         _;
     }
 
-    function mint(address to, uint256 amount) external onlyMaterialTrade {
+    function mint(address to, uint256 amount) external onlyFactory {
         _mint(to, amount);
     }
 
-    function burn(address from, uint256 amount) external onlyMaterialTrade {
+    function burn(address from, uint256 amount) external onlyFactory {
         _burn(from, amount);
     }
 
