@@ -11,17 +11,15 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using Address for address payable;
 
     uint256 public priceIncrement;
-    uint256 public protocolFeePercent;
-    uint256 public materialOwnerFeePercent;
-    address payable public protocolFeeDestination;
+    uint256 public protocolFeeRate;
+    uint256 public materialOwnerFeeRate;
+    address payable public treasury;
 
-    event SetProtocolFeeDestination(address indexed destination);
-    event SetProtocolFeePercent(uint256 percent);
-    event SetMaterialOwnerFeePercent(uint256 percent);
-
+    event TreasuryUpdated(address indexed treasury);
+    event ProtocolFeeRateUpdated(uint256 rate);
+    event MaterialOwnerFeeRateUpdated(uint256 rate);
     event MaterialCreated(address indexed materialOwner, address indexed materialAddress, string name, string symbol);
-
-    event Trade(
+    event TradeExecuted(
         address indexed trader,
         address indexed materialAddress,
         bool indexed isBuy,
@@ -33,37 +31,40 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     );
 
     function initialize(
-        address payable _protocolFeeDestination,
-        uint256 _protocolFeePercent,
-        uint256 _materialOwnerFeePercent,
-        uint256 _priceIncrementPerToken
+        address payable _treasury,
+        uint256 _protocolFeeRate,
+        uint256 _materialOwnerFeeRate,
+        uint256 _priceIncrement
     ) public initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 
-        protocolFeeDestination = _protocolFeeDestination;
-        protocolFeePercent = _protocolFeePercent;
-        materialOwnerFeePercent = _materialOwnerFeePercent;
-        priceIncrement = _priceIncrementPerToken;
+        treasury = _treasury;
+        protocolFeeRate = _protocolFeeRate;
+        materialOwnerFeeRate = _materialOwnerFeeRate;
+        priceIncrement = _priceIncrement;
 
-        emit SetProtocolFeeDestination(_protocolFeeDestination);
-        emit SetProtocolFeePercent(_protocolFeePercent);
-        emit SetMaterialOwnerFeePercent(_materialOwnerFeePercent);
+        emit TreasuryUpdated(_treasury);
+        emit ProtocolFeeRateUpdated(_protocolFeeRate);
+        emit MaterialOwnerFeeRateUpdated(_materialOwnerFeeRate);
     }
 
-    function setProtocolFeeDestination(address payable _feeDestination) public onlyOwner {
-        protocolFeeDestination = _feeDestination;
-        emit SetProtocolFeeDestination(_feeDestination);
+    function setTreasury(address payable _treasury) external onlyOwner {
+        require(_treasury != address(0), "Invalid treasury address");
+        treasury = _treasury;
+        emit TreasuryUpdated(_treasury);
     }
 
-    function setProtocolFeePercent(uint256 _feePercent) public onlyOwner {
-        protocolFeePercent = _feePercent;
-        emit SetProtocolFeePercent(_feePercent);
+    function setProtocolFeeRate(uint256 _rate) external onlyOwner {
+        require(_rate <= 1 ether, "Fee rate exceeds maximum");
+        protocolFeeRate = _rate;
+        emit ProtocolFeeRateUpdated(_rate);
     }
 
-    function setMaterialOwnerFeePercent(uint256 _feePercent) public onlyOwner {
-        materialOwnerFeePercent = _feePercent;
-        emit SetMaterialOwnerFeePercent(_feePercent);
+    function setMaterialOwnerFeeRate(uint256 _rate) external onlyOwner {
+        require(_rate <= 1 ether, "Fee rate exceeds maximum");
+        materialOwnerFeeRate = _rate;
+        emit MaterialOwnerFeeRateUpdated(_rate);
     }
 
     function createMaterial(string memory name, string memory symbol) public returns (address) {
@@ -94,27 +95,27 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function getBuyPriceAfterFee(address materialAddress, uint256 amount) external view returns (uint256) {
         uint256 price = getBuyPrice(materialAddress, amount);
-        uint256 protocolFee = (price * protocolFeePercent) / 1e18;
-        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1e18;
+        uint256 protocolFee = (price * protocolFeeRate) / 1e18;
+        uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1e18;
         return price + protocolFee + materialOwnerFee;
     }
 
     function getSellPriceAfterFee(address materialAddress, uint256 amount) external view returns (uint256) {
         uint256 price = getSellPrice(materialAddress, amount);
-        uint256 protocolFee = (price * protocolFeePercent) / 1e18;
-        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1e18;
+        uint256 protocolFee = (price * protocolFeeRate) / 1e18;
+        uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1e18;
         return price - protocolFee - materialOwnerFee;
     }
 
     function executeTrade(address materialAddress, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
         Material material = Material(materialAddress);
-        uint256 protocolFee = (price * protocolFeePercent) / 1e18;
-        uint256 materialOwnerFee = (price * materialOwnerFeePercent) / 1e18;
+        uint256 protocolFee = (price * protocolFeeRate) / 1e18;
+        uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1e18;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + materialOwnerFee, "Insufficient payment");
             material.mint(msg.sender, amount);
-            protocolFeeDestination.sendValue(protocolFee);
+            treasury.sendValue(protocolFee);
             payable(material.owner()).sendValue(materialOwnerFee);
             if (msg.value > price + protocolFee + materialOwnerFee) {
                 uint256 refund = msg.value - price - protocolFee - materialOwnerFee;
@@ -125,11 +126,11 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             material.burn(msg.sender, amount);
             uint256 netAmount = price - protocolFee - materialOwnerFee;
             payable(msg.sender).sendValue(netAmount);
-            protocolFeeDestination.sendValue(protocolFee);
+            treasury.sendValue(protocolFee);
             payable(material.owner()).sendValue(materialOwnerFee);
         }
 
-        emit Trade(
+        emit TradeExecuted(
             msg.sender,
             materialAddress,
             isBuy,

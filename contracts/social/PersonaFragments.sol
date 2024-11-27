@@ -8,13 +8,13 @@ contract PersonaFragments is HoldingRewardsBase {
     using Address for address payable;
 
     uint256 public priceIncrementPerFragment;
-    uint256 public personaFeeRate;
+    uint256 public personaOwnerFeeRate;
 
     mapping(address => mapping(address => uint256)) public balance;
     mapping(address => uint256) public supply;
 
-    event PersonaFeeRateUpdated(uint256 rate);
-    event Trade(
+    event PersonaOwnerFeeRateUpdated(uint256 rate);
+    event TradeExecuted(
         address indexed trader,
         address indexed persona,
         bool indexed isBuy,
@@ -29,7 +29,7 @@ contract PersonaFragments is HoldingRewardsBase {
     function initialize(
         address payable _treasury,
         uint256 _protocolFeeRate,
-        uint256 _personaFeeRate,
+        uint256 _personaOwnerFeeRate,
         uint256 _priceIncrementPerFragment,
         uint256 _baseDivider,
         address _holdingVerifier
@@ -42,21 +42,21 @@ contract PersonaFragments is HoldingRewardsBase {
 
         treasury = _treasury;
         protocolFeeRate = _protocolFeeRate;
-        personaFeeRate = _personaFeeRate;
+        personaOwnerFeeRate = _personaOwnerFeeRate;
         priceIncrementPerFragment = _priceIncrementPerFragment;
         baseDivider = _baseDivider;
         holdingVerifier = _holdingVerifier;
 
         emit TreasuryUpdated(_treasury);
         emit ProtocolFeeRateUpdated(_protocolFeeRate);
-        emit PersonaFeeRateUpdated(_personaFeeRate);
+        emit PersonaOwnerFeeRateUpdated(_personaOwnerFeeRate);
         emit HoldingVerifierUpdated(_holdingVerifier);
     }
 
-    function setPersonaFeeRate(uint256 _rate) external onlyOwner {
+    function setPersonaOwnerFeeRate(uint256 _rate) external onlyOwner {
         require(_rate <= 1 ether, "Fee rate exceeds maximum");
-        personaFeeRate = _rate;
-        emit PersonaFeeRateUpdated(_rate);
+        personaOwnerFeeRate = _rate;
+        emit PersonaOwnerFeeRateUpdated(_rate);
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
@@ -80,14 +80,14 @@ contract PersonaFragments is HoldingRewardsBase {
     function getBuyPriceAfterFee(address persona, uint256 amount) external view returns (uint256) {
         uint256 price = getBuyPrice(persona, amount);
         uint256 protocolFee = (price * protocolFeeRate) / 1 ether;
-        uint256 personaFee = (price * personaFeeRate) / 1 ether;
+        uint256 personaFee = (price * personaOwnerFeeRate) / 1 ether;
         return price + protocolFee + personaFee;
     }
 
     function getSellPriceAfterFee(address persona, uint256 amount) external view returns (uint256) {
         uint256 price = getSellPrice(persona, amount);
         uint256 protocolFee = (price * protocolFeeRate) / 1 ether;
-        uint256 personaFee = (price * personaFeeRate) / 1 ether;
+        uint256 personaFee = (price * personaOwnerFeeRate) / 1 ether;
         return price - protocolFee - personaFee;
     }
 
@@ -100,7 +100,7 @@ contract PersonaFragments is HoldingRewardsBase {
     ) private nonReentrant {
         uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingRewardSignature);
         uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
-        uint256 personaFee = ((price * personaFeeRate) / 1 ether) + holdingReward;
+        uint256 personaFee = ((price * personaOwnerFeeRate) / 1 ether) + holdingReward;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + personaFee, "Insufficient payment");
@@ -120,7 +120,7 @@ contract PersonaFragments is HoldingRewardsBase {
             payable(persona).sendValue(personaFee);
         }
 
-        emit Trade(msg.sender, persona, isBuy, amount, price, protocolFee, personaFee, holdingReward, supply[persona]);
+        emit TradeExecuted(msg.sender, persona, isBuy, amount, price, protocolFee, personaFee, holdingReward, supply[persona]);
     }
 
     function buy(address persona, uint256 amount, bytes memory holdingRewardSignature) external payable {

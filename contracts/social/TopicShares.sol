@@ -25,7 +25,7 @@ contract TopicShares is HoldingRewardsBase {
     mapping(bytes32 => mapping(address => Holder)) public holders;
 
     event HolderFeeRateUpdated(uint256 rate);
-    event Trade(
+    event TradeExecuted(
         address indexed trader,
         bytes32 indexed topic,
         bool indexed isBuy,
@@ -36,7 +36,7 @@ contract TopicShares is HoldingRewardsBase {
         uint256 holdingReward,
         uint256 supply
     );
-    event ClaimHolderFee(address indexed holder, bytes32 indexed topic, uint256 fee);
+    event HolderFeeClaimed(address indexed holder, bytes32 indexed topic, uint256 fee);
 
     function initialize(
         address payable _treasury,
@@ -125,7 +125,7 @@ contract TopicShares is HoldingRewardsBase {
             payable(msg.sender).sendValue(msg.value - price - protocolFee - holderFee);
         }
 
-        emit Trade(msg.sender, topic, true, amount, price, protocolFee, holderFee, holdingReward, t.supply);
+        emit TradeExecuted(msg.sender, topic, true, amount, price, protocolFee, holderFee, holdingReward, t.supply);
     }
 
     function sell(bytes32 topic, uint256 amount, bytes memory holdingRewardSignature) external nonReentrant {
@@ -149,7 +149,7 @@ contract TopicShares is HoldingRewardsBase {
         payable(msg.sender).sendValue(price - protocolFee - holderFee);
         treasury.sendValue(protocolFee);
 
-        emit Trade(msg.sender, topic, false, amount, price, protocolFee, holderFee, holdingReward, t.supply);
+        emit TradeExecuted(msg.sender, topic, false, amount, price, protocolFee, holderFee, holdingReward, t.supply);
     }
 
     function claimableHolderFee(bytes32 topic, address holder) public view returns (uint256 claimableFee) {
@@ -166,7 +166,7 @@ contract TopicShares is HoldingRewardsBase {
         uint256 claimableFee = uint256(accumulatedFee - holder.feeDebt);
         holder.feeDebt = accumulatedFee;
         payable(msg.sender).sendValue(claimableFee);
-        emit ClaimHolderFee(msg.sender, topic, claimableFee);
+        emit HolderFeeClaimed(msg.sender, topic, claimableFee);
     }
 
     function claimHolderFee(bytes32 topic) external nonReentrant {

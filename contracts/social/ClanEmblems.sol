@@ -25,7 +25,7 @@ contract ClanEmblems is HoldingRewardsBase {
     event ClanDeleted(uint256 indexed clanId);
     event ClanOwnershipTransferred(uint256 indexed clanId, address indexed previousOwner, address indexed newOwner);
     event FeesWithdrawn(uint256 indexed clanId, uint256 amount);
-    event Trade(
+    event TradeExecuted(
         address indexed trader,
         uint256 indexed clanId,
         bool indexed isBuy,
@@ -165,7 +165,7 @@ contract ClanEmblems is HoldingRewardsBase {
             clans[clanId].accumulatedFees += clanFee;
         }
 
-        emit Trade(msg.sender, clanId, isBuy, amount, price, protocolFee, clanFee, holdingReward, supply[clanId]);
+        emit TradeExecuted(msg.sender, clanId, isBuy, amount, price, protocolFee, clanFee, holdingReward, supply[clanId]);
     }
 
     function buy(uint256 clanId, uint256 amount, bytes memory holdingRewardSignature) external payable {

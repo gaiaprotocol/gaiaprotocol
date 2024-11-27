@@ -12,10 +12,10 @@ contract Material is ERC20Permit, Ownable2Step {
 
     mapping(address => bool) public whitelist;
 
-    event SetName(string name);
-    event SetSymbol(string symbol);
-    event AddToWhitelist(address indexed account);
-    event RemoveFromWhitelist(address indexed account);
+    event NameSet(string name);
+    event SymbolSet(string symbol);
+    event WhitelistAdded(address indexed account);
+    event WhitelistRemoved(address indexed account);
 
     constructor(
         address owner_,
@@ -26,8 +26,8 @@ contract Material is ERC20Permit, Ownable2Step {
         _name = name_;
         _symbol = symbol_;
 
-        emit SetName(name_);
-        emit SetSymbol(symbol_);
+        emit NameSet(name_);
+        emit SymbolSet(symbol_);
     }
 
     function name() public view virtual override returns (string memory) {
@@ -40,12 +40,12 @@ contract Material is ERC20Permit, Ownable2Step {
 
     function setName(string memory name_) external onlyOwner {
         _name = name_;
-        emit SetName(name_);
+        emit NameSet(name_);
     }
 
     function setSymbol(string memory symbol_) external onlyOwner {
         _symbol = symbol_;
-        emit SetSymbol(symbol_);
+        emit SymbolSet(symbol_);
     }
 
     modifier onlyMaterialTrade() {
@@ -64,13 +64,13 @@ contract Material is ERC20Permit, Ownable2Step {
     function addToWhitelist(address _address) external onlyOwner {
         require(!whitelist[_address], "Address is already whitelisted");
         whitelist[_address] = true;
-        emit AddToWhitelist(_address);
+        emit WhitelistAdded(_address);
     }
 
     function removeFromWhitelist(address _address) external onlyOwner {
         require(whitelist[_address], "Address is not whitelisted");
         whitelist[_address] = false;
-        emit RemoveFromWhitelist(_address);
+        emit WhitelistRemoved(_address);
     }
 
     function isWhitelisted(address _address) public view returns (bool) {
