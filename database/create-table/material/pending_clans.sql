@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "public"."pending_materials" (
-  "metadata_hash" "uuid" "gen_random_uuid"() NOT NULL,
+  "metadata_hash" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
   "author" text NOT NULL,
   "logo_image_url" text,
   "logo_thumbnail_url" text,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS "public"."pending_materials" (
 ALTER TABLE "public"."pending_materials" OWNER TO "postgres";
 
 ALTER TABLE ONLY "public"."pending_materials"
-  ADD CONSTRAINT "pending_materials_pkey" PRIMARY KEY ("id");
+  ADD CONSTRAINT "pending_materials_pkey" PRIMARY KEY ("metadata_hash");
 
 ALTER TABLE "public"."pending_materials" ENABLE ROW LEVEL SECURITY;
 

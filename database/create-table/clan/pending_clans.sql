@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "public"."pending_clans" (
-  "metadata_hash" "uuid" "gen_random_uuid"() NOT NULL,
+  "metadata_hash" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
   "author" text NOT NULL,
   "name" text NOT NULL,
   "logo_image_url" text,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS "public"."pending_clans" (
 ALTER TABLE "public"."pending_clans" OWNER TO "postgres";
 
 ALTER TABLE ONLY "public"."pending_clans"
-  ADD CONSTRAINT "pending_clans_pkey" PRIMARY KEY ("id");
+  ADD CONSTRAINT "pending_clans_pkey" PRIMARY KEY ("metadata_hash");
 
 ALTER TABLE "public"."pending_clans" ENABLE ROW LEVEL SECURITY;
 
