@@ -14,13 +14,12 @@ interface PersonaEntity {
   is_gaia_name?: boolean;
 
   profile_image_url?: string;
-  thumbnail_image_url?: string;
+  profile_thumbnail_url?: string;
 
   nft_address?: string;
   nft_token_id?: string;
 
   bio?: string;
-  social_links?: string[];
 }
 
 const OPENSEA_API_KEY = Deno.env.get("OPENSEA_API_KEY")!;
@@ -107,13 +106,6 @@ serve(async (req) => {
 
   if (personaData.bio && personaData.bio.length > 1000) {
     throw new Error("Bio is too long");
-  }
-
-  if (
-    personaData.social_links &&
-    personaData.social_links.every((link) => link.length > 256)
-  ) {
-    throw new Error("Social link is too long");
   }
 
   await safeStore(

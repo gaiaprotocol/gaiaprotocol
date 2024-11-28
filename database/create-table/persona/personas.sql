@@ -5,11 +5,10 @@ CREATE TABLE IF NOT EXISTS "public"."personas" (
   "is_basename" boolean,
   "is_gaia_name" boolean,
   "profile_image_url" "text",
-  "thumbnail_image_url" "text",
+  "profile_thumbnail_url" "text",
   "nft_address" "text",
   "nft_token_id" "text",
   "bio" "text",
-  "social_links" "text"[],
   "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
   "updated_at" timestamp with time zone
 );
