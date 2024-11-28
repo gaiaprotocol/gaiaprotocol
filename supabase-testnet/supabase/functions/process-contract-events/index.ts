@@ -134,6 +134,14 @@ serve(async (req) => {
   for (const log of logs) {
     const { blockNumber, transactionHash, logIndex, topics, data } = log;
 
+    // Skip the first topic if it's the contract's upgrade event
+    if (
+      topics[0] ===
+        "0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b"
+    ) {
+      continue;
+    }
+
     const decodedLog = decodeEventLog({
       abi: contractInfo.abi,
       data,
