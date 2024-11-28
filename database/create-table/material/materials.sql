@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "public"."materials" (
-  "chain" text NOT NULL,
+  "chain_id" bigint NOT NULL,
   "address" text NOT NULL,
   "owner" text NOT NULL,
   "name" text NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS "public"."materials" (
 ALTER TABLE "public"."materials" OWNER TO "postgres";
 
 ALTER TABLE ONLY "public"."materials"
-  ADD CONSTRAINT "materials_pkey" PRIMARY KEY ("chain", "address");
+  ADD CONSTRAINT "materials_pkey" PRIMARY KEY ("chain_id", "address");
 
 ALTER TABLE "public"."materials" ENABLE ROW LEVEL SECURITY;
 

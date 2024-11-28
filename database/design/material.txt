@@ -1,5 +1,5 @@
 materials
-	chain - text - pk
+	chain_id - bigint - pk
   address - text - pk
 	owner - text - not null
   name - text - not null
