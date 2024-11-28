@@ -1,0 +1,16 @@
+contract_event_sync_status
+  chain - text - pk
+  contract_address - text - pk
+  last_synced_block_number - int8 - not null
+  last_synced_at - timestampz - now()
+
+contract_events
+  chain - text - pk
+  contract_address - text - pk
+  block_number - int8 - pk
+  log_index - int8 - pk
+  transaction_hash - text - not null
+  event_name - text - not null
+  event_arguments - text[] - not null
+  from - text - not null
+  created_at - timestampz - now()
