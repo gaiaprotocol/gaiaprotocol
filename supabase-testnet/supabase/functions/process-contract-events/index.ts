@@ -157,7 +157,12 @@ serve(async (req) => {
       log_index: Number(logIndex),
       transaction_hash: transactionHash,
       name: decodedLog.eventName as any,
-      args: decodedLog.args,
+      args: Object.fromEntries(
+        Object.entries(decodedLog.args as any).map(([key, value]) => [
+          key,
+          typeof value === "bigint" ? value.toString() : value,
+        ]),
+      ),
     });
   }
 
