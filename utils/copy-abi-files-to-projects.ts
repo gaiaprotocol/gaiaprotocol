@@ -9,18 +9,22 @@ const DESTINATIONS = {
     "token-website/app/contracts/artifacts",
   ],
   "social/PersonaFragments": [
+    "gaiaprotocol/supabase-testnet/supabase/functions/_shared/artifacts",
     "gaiaprotocol-module/src/persona/contracts/artifacts",
   ],
   "social/ClanEmblems": [
+    "gaiaprotocol/supabase-testnet/supabase/functions/_shared/artifacts",
     "gaiaprotocol-module/src/clan/contracts/artifacts",
   ],
   "social/TopicShares": [
+    "gaiaprotocol/supabase-testnet/supabase/functions/_shared/artifacts",
     "gaiaprotocol-module/src/topic/contracts/artifacts",
   ],
   "gaming/Material": [
     "gaiaprotocol-module/src/material/contracts/artifacts",
   ],
   "gaming/MaterialFactory": [
+    "gaiaprotocol/supabase-testnet/supabase/functions/_shared/artifacts",
     "gaiaprotocol-module/src/material/contracts/artifacts",
   ],
 };

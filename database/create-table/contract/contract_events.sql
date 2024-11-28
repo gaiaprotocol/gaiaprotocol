@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS "public"."contract_events" (
   "block_number" bigint NOT NULL,
   "log_index" bigint NOT NULL,
   "transaction_hash" text NOT NULL,
-  "event_name" text NOT NULL,
-  "event_arguments" text[] NOT NULL,
+  "name" text NOT NULL,
+  "args" "jsonb" NOT NULL,
   "from" text NOT NULL,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
