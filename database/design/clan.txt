@@ -11,7 +11,6 @@ clans
 
 pending_clans
   metadata_hash - text - pk
-	author - text - not null
   name - text - not null
   logo_image_url - text - nullable
   logo_thumbnail_url - text - nullable

@@ -20,3 +20,5 @@ ALTER TABLE "public"."contract_events" ENABLE ROW LEVEL SECURITY;
 GRANT ALL ON TABLE "public"."contract_events" TO "anon";
 GRANT ALL ON TABLE "public"."contract_events" TO "authenticated";
 GRANT ALL ON TABLE "public"."contract_events" TO "service_role";
+
+CREATE TRIGGER "handle_contract_event" AFTER INSERT ON "public"."contract_events" FOR EACH ROW EXECUTE FUNCTION "public"."handle_contract_event"();
