@@ -89,15 +89,18 @@ serve(async (req) => {
   if (!contractInfo) throw new Error(`Invalid contract: ${contract}`);
 
   if (!blockPeriod || isNaN(blockPeriod)) {
-    // base
-    if (chainId === 8453 || chainId === 84532) blockPeriod = 500;
-    // arbitrum
-    else if (chainId === 42161 || chainId === 421614) blockPeriod = 2500;
-    // else
-    else blockPeriod = 750;
+    const defaultBlockPeriods: Record<number, number> = {
+      8453: 500, // Base mainnet
+      84532: 500, // Base testnet
+      42161: 2500, // Arbitrum One
+      421614: 2500, // Arbitrum testnet
+    };
+    blockPeriod = defaultBlockPeriods[chainId] ?? 750;
   }
 
   const chain = getChainById(chainId);
+  if (!chain) throw new Error(`Unsupported chainId: ${chainId}`);
+
   const client = createPublicClient({
     chain,
     transport: chain === mainnet
@@ -105,7 +108,6 @@ serve(async (req) => {
       : http(),
   });
 
-  // Get last synced block
   const syncStatus = await safeFetchSingle<
     { last_synced_block_number: number }
   >("contract_event_sync_status", (b) =>
@@ -128,7 +130,8 @@ serve(async (req) => {
     toBlock: BigInt(toBlock),
   });
 
-  const events: EventEntity[] = logs.map((log) => {
+  const events: EventEntity[] = [];
+  for (const log of logs) {
     const { blockNumber, transactionHash, logIndex, topics, data } = log;
 
     const decodedLog = decodeEventLog({
@@ -137,7 +140,7 @@ serve(async (req) => {
       topics,
     });
 
-    return {
+    events.push({
       chain_id: chainId,
       contract_address: contractInfo.address,
       block_number: Number(blockNumber),
@@ -145,8 +148,8 @@ serve(async (req) => {
       transaction_hash: transactionHash,
       name: decodedLog.eventName as any,
       args: decodedLog.args,
-    };
-  });
+    });
+  }
 
   await safeStore("contract_events", (b) => b.upsert(events));
   await safeStore("contract_event_sync_status", (b) =>
