@@ -12,16 +12,16 @@ import {
 } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
 import { getChainById } from "https://raw.githubusercontent.com/yjgaia/wallet-utils/refs/heads/main/deno/mod.ts";
 import ClanEmblemsArtifact from "../_shared/artifacts/ClanEmblems.json" with {
-  type: "json"
+  type: "json",
 };
 import MaterialFactoryArtifact from "../_shared/artifacts/MaterialFactory.json" with {
-  type: "json"
+  type: "json",
 };
 import PersonaFragmentsArtifact from "../_shared/artifacts/PersonaFragments.json" with {
-  type: "json"
+  type: "json",
 };
 import TopicSharesArtifact from "../_shared/artifacts/TopicShares.json" with {
-  type: "json"
+  type: "json",
 };
 
 const INFURA_API_KEY = Deno.env.get("INFURA_API_KEY")!;
@@ -80,7 +80,7 @@ interface RequestBody {
 }
 
 serve(async (req) => {
-  const { chainId, contract, blockPeriod } = await req.json() as RequestBody;
+  let { chainId, contract, blockPeriod } = await req.json() as RequestBody;
   if (!chainId || !contract) {
     throw new Error("Missing 'chainId' or 'contract' in the request body.");
   }
@@ -88,23 +88,16 @@ serve(async (req) => {
   const contractInfo = contracts[contract];
   if (!contractInfo) throw new Error(`Invalid contract: ${contract}`);
 
-  let finalBlockPeriod: number;
-  if (blockPeriod && !isNaN(blockPeriod)) {
-    finalBlockPeriod = blockPeriod;
-  } else {
-    // Set default blockPeriod based on chainId
-    const defaultBlockPeriods: Record<number, number> = {
-      8453: 500, // Base mainnet
-      84532: 500, // Base testnet
-      42161: 2500, // Arbitrum One
-      421614: 2500, // Arbitrum testnet
-    };
-    finalBlockPeriod = defaultBlockPeriods[chainId] ?? 750;
+  if (!blockPeriod || isNaN(blockPeriod)) {
+    // base
+    if (chainId === 8453 || chainId === 84532) blockPeriod = 500;
+    // arbitrum
+    else if (chainId === 42161 || chainId === 421614) blockPeriod = 2500;
+    // else
+    else blockPeriod = 750;
   }
 
   const chain = getChainById(chainId);
-  if (!chain) throw new Error(`Unsupported chainId: ${chainId}`);
-
   const client = createPublicClient({
     chain,
     transport: chain === mainnet
@@ -120,19 +113,14 @@ serve(async (req) => {
       .eq("chain_id", chainId)
       .eq("contract_address", contractInfo.address));
 
-  const lastSyncedBlockNumber = syncStatus?.last_synced_block_number ??
-    (contractInfo.deploymentBlock - 1);
   const currentBlock = await client.getBlockNumber();
-
-  const fromBlock = lastSyncedBlockNumber + 1;
   const toBlock = Math.min(
-    fromBlock + finalBlockPeriod - 1,
+    (syncStatus
+      ? syncStatus.last_synced_block_number
+      : contractInfo.deploymentBlock) + blockPeriod,
     Number(currentBlock),
   );
-
-  if (fromBlock > Number(currentBlock)) {
-    return "No new blocks to sync.";
-  }
+  const fromBlock = toBlock - blockPeriod * 2;
 
   const logs = await client.getLogs({
     address: contractInfo.address,
@@ -140,9 +128,7 @@ serve(async (req) => {
     toBlock: BigInt(toBlock),
   });
 
-  const events: EventEntity[] = [];
-
-  for (const log of logs) {
+  const events: EventEntity[] = logs.map((log) => {
     const { blockNumber, transactionHash, logIndex, topics, data } = log;
 
     const decodedLog = decodeEventLog({
@@ -151,7 +137,7 @@ serve(async (req) => {
       topics,
     });
 
-    events.push({
+    return {
       chain_id: chainId,
       contract_address: contractInfo.address,
       block_number: Number(blockNumber),
@@ -159,19 +145,14 @@ serve(async (req) => {
       transaction_hash: transactionHash,
       name: decodedLog.eventName as any,
       args: decodedLog.args,
-    });
-  }
+    };
+  });
 
-  if (events.length > 0) {
-    await safeStore("contract_events", (b) => b.upsert(events));
-  }
-
+  await safeStore("contract_events", (b) => b.upsert(events));
   await safeStore("contract_event_sync_status", (b) =>
     b.upsert({
       chain_id: chainId,
       contract_address: contractInfo.address,
       last_synced_block_number: toBlock,
     }));
-
-  return `Synced ${events.length} events from block ${fromBlock} to ${toBlock}`;
 });
