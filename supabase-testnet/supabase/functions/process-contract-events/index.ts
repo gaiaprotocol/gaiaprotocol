@@ -79,6 +79,11 @@ interface RequestBody {
   blockPeriod?: number;
 }
 
+const UPGRADE_RELATED_TOPICS = new Set<`0x${string}`>([
+  "0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b", // Upgraded(address)
+  "0x7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f", // AdminChanged(address,address)
+]);
+
 serve(async (req) => {
   let { chainId, contract, blockPeriod } = await req.json() as RequestBody;
   if (!chainId || !contract) {
@@ -135,10 +140,7 @@ serve(async (req) => {
     const { blockNumber, transactionHash, logIndex, topics, data } = log;
 
     // Skip the first topic if it's the contract's upgrade event
-    if (
-      topics[0] ===
-        "0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b"
-    ) {
+    if (topics[0] && UPGRADE_RELATED_TOPICS.has(topics[0])) {
       continue;
     }
 
