@@ -11,7 +11,7 @@ BEGIN
         FROM pending_clans pc
         WHERE pc.metadata_hash = NEW.args->>'metadataHash'
         ON CONFLICT (chain_id, id) DO UPDATE
-        SET owner = NEW.args->>'clanOwner';
+        SET owner = NEW.args->>'clanOwner', deleted_at = NULL;
 
         DELETE FROM pending_clans
         WHERE metadata_hash = NEW.args->>'metadataHash';
@@ -19,13 +19,15 @@ BEGIN
         INSERT INTO clans (chain_id, id, owner, name)
         VALUES (NEW.chain_id, NEW.args->>'clanId', NEW.args->>'clanOwner', 'Unnamed Clan')
         ON CONFLICT (chain_id, id) DO UPDATE
-        SET owner = NEW.args->>'clanOwner';
+        SET owner = NEW.args->>'clanOwner', deleted_at = NULL;
       END IF;
 
     ELSIF NEW.name = 'ClanDeleted' THEN
-      DELETE FROM clans
+      UPDATE clans 
+      SET deleted_at = NOW()
       WHERE chain_id = NEW.chain_id
-        AND id = NEW.args->>'clanId';
+        AND id = NEW.args->>'clanId'
+        AND deleted_at IS NULL;
     END IF;
   END IF;
 
@@ -38,7 +40,7 @@ BEGIN
         FROM pending_materials pm
         WHERE pm.metadata_hash = NEW.args->>'metadataHash'
         ON CONFLICT (chain_id, address) DO UPDATE
-        SET owner = NEW.args->>'materialOwner';
+        SET owner = NEW.args->>'materialOwner', deleted_at = NULL;
 
         DELETE FROM pending_materials
         WHERE metadata_hash = NEW.args->>'metadataHash';
@@ -46,13 +48,15 @@ BEGIN
         INSERT INTO materials (chain_id, address, owner, name, symbol)
         VALUES (NEW.chain_id, NEW.args->>'materialAddress', NEW.args->>'materialOwner', NEW.args->>'name', NEW.args->>'symbol')
         ON CONFLICT (chain_id, address) DO UPDATE
-        SET owner = NEW.args->>'materialOwner';
+        SET owner = NEW.args->>'materialOwner', deleted_at = NULL;
       END IF;
 
     ELSIF NEW.name = 'MaterialDeleted' THEN
-      DELETE FROM materials
+      UPDATE materials
+      SET deleted_at = NOW()
       WHERE chain_id = NEW.chain_id
-        AND address = NEW.args->>'materialAddress';
+        AND address = NEW.args->>'materialAddress'
+        AND deleted_at IS NULL;
     END IF;
   END IF;
 
