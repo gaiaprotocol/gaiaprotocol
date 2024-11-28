@@ -25,3 +25,5 @@ GRANT ALL ON TABLE "public"."personas" TO "authenticated";
 GRANT ALL ON TABLE "public"."personas" TO "service_role";
 
 CREATE POLICY "Allow read access for all users" ON "public"."personas" FOR SELECT USING (true);
+
+CREATE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."personas" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();

@@ -21,7 +21,7 @@ contract ClanEmblems is HoldingRewardsBase {
     mapping(uint256 => uint256) public supply;
 
     event ClanFeeRateUpdated(uint256 rate);
-    event ClanCreated(uint256 indexed clanId, address indexed owner, bytes32 metadataHash);
+    event ClanCreated(address indexed clanOwner, uint256 indexed clanId, bytes32 metadataHash);
     event ClanDeleted(uint256 indexed clanId);
     event ClanOwnershipTransferred(uint256 indexed clanId, address indexed previousOwner, address indexed newOwner);
     event FeesWithdrawn(uint256 indexed clanId, uint256 amount);
@@ -71,7 +71,7 @@ contract ClanEmblems is HoldingRewardsBase {
     function createClan(bytes32 metadataHash) external returns (uint256 clanId) {
         clanId = nextClanId++;
         clans[clanId].owner = msg.sender;
-        emit ClanCreated(clanId, msg.sender, metadataHash);
+        emit ClanCreated(msg.sender, clanId, metadataHash);
     }
 
     function deleteClan(uint256 clanId) external {
