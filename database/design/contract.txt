@@ -12,5 +12,4 @@ contract_events
   transaction_hash - text - not null
   event_name - text - not null
   event_arguments - text[] - not null
-  from - text - not null
   created_at - timestampz - now()

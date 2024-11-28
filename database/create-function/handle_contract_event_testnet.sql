@@ -1,6 +1,7 @@
 CREATE OR REPLACE FUNCTION "public"."handle_contract_event"() RETURNS "trigger"
 LANGUAGE "plpgsql" SECURITY DEFINER
-AS $$BEGIN
+AS $$
+BEGIN
   -- ClanEmblems
   IF NEW.contract_address = '0x9322C4A5E5725262C9960aDE87259d1cE2812412' THEN
     IF NEW.name = 'ClanCreated' THEN
@@ -11,6 +12,10 @@ AS $$BEGIN
 
       DELETE FROM pending_clans
       WHERE metadata_hash = NEW.args->>'metadataHash';
+    ELSIF NEW.name = 'ClanDeleted' THEN
+      DELETE FROM clans
+      WHERE chain_id = NEW.chain_id
+        AND id = NEW.args->>'clanId';
     END IF;
   END IF;
 
@@ -24,6 +29,10 @@ AS $$BEGIN
 
       DELETE FROM pending_materials
       WHERE metadata_hash = NEW.args->>'metadataHash';
+    ELSIF NEW.name = 'MaterialDeleted' THEN
+      DELETE FROM materials
+      WHERE chain_id = NEW.chain_id
+        AND address = NEW.args->>'materialAddress';
     END IF;
   END IF;
 

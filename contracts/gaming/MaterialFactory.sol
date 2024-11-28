@@ -25,6 +25,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         string symbol,
         bytes32 metadataHash
     );
+    event MaterialDeleted(address indexed materialAddress);
     event TradeExecuted(
         address indexed trader,
         address indexed materialAddress,
@@ -77,6 +78,15 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         Material newMaterial = new Material(msg.sender, name, symbol);
         emit MaterialCreated(msg.sender, address(newMaterial), name, symbol, metadataHash);
         return address(newMaterial);
+    }
+
+    function deleteMaterial(address materialAddress) external {
+        Material material = Material(materialAddress);
+        require(material.owner() == msg.sender, "Not material owner");
+        require(material.totalSupply() == 0, "Supply must be zero");
+
+        material.renounceOwnership();
+        emit MaterialDeleted(materialAddress);
     }
 
     function getPrice(uint256 supply, uint256 amount) public view returns (uint256) {
