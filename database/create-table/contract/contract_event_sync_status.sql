@@ -1,5 +1,4 @@
 CREATE TABLE IF NOT EXISTS "public"."contract_event_sync_status" (
-  "chain_id" bigint NOT NULL,
   "contract_address" text NOT NULL,
   "last_synced_block_number" bigint NOT NULL,
   "last_synced_at" timestamp with time zone DEFAULT now() NOT NULL
@@ -8,7 +7,7 @@ CREATE TABLE IF NOT EXISTS "public"."contract_event_sync_status" (
 ALTER TABLE "public"."contract_event_sync_status" OWNER TO "postgres";
 
 ALTER TABLE ONLY "public"."contract_event_sync_status"
-  ADD CONSTRAINT "contract_event_sync_status_pkey" PRIMARY KEY ("chain_id", "contract_address");
+  ADD CONSTRAINT "contract_event_sync_status_pkey" PRIMARY KEY ("contract_address");
 
 ALTER TABLE "public"."contract_event_sync_status" ENABLE ROW LEVEL SECURITY;
 

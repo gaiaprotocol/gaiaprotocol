@@ -1,5 +1,4 @@
 CREATE TABLE IF NOT EXISTS "public"."contract_events" (
-  "chain_id" bigint NOT NULL,
   "contract_address" text NOT NULL,
   "block_number" bigint NOT NULL,
   "log_index" bigint NOT NULL,
@@ -12,7 +11,7 @@ CREATE TABLE IF NOT EXISTS "public"."contract_events" (
 ALTER TABLE "public"."contract_events" OWNER TO "postgres";
 
 ALTER TABLE ONLY "public"."contract_events"
-  ADD CONSTRAINT "contract_events_pkey" PRIMARY KEY ("chain_id", "contract_address", "block_number", "log_index");
+  ADD CONSTRAINT "contract_events_pkey" PRIMARY KEY ("contract_address", "block_number", "log_index");
 
 ALTER TABLE "public"."contract_events" ENABLE ROW LEVEL SECURITY;
 

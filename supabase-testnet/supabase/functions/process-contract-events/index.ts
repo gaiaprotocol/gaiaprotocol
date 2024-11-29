@@ -4,13 +4,12 @@ import {
   decodeEventLog,
   http,
 } from "https://esm.sh/viem@2.21.47";
-import { mainnet } from "https://esm.sh/viem@2.21.47/chains";
+import { base, baseSepolia } from "https://esm.sh/viem@2.21.47/chains";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import {
   safeFetchSingle,
   safeStore,
 } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
-import { getChainById } from "https://raw.githubusercontent.com/yjgaia/wallet-utils/refs/heads/main/deno/mod.ts";
 import ClanEmblemsArtifact from "../_shared/artifacts/ClanEmblems.json" with {
   type: "json",
 };
@@ -64,7 +63,6 @@ const contracts: Record<string, ContractInfo> = {
 };
 
 interface EventEntity {
-  chain_id: number;
   contract_address: `0x${string}`;
   block_number: number;
   log_index: number;
@@ -84,50 +82,35 @@ const UPGRADE_RELATED_TOPICS = new Set<`0x${string}`>([
   "0x7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f", // AdminChanged(address,address)
 ]);
 
+const BLOCK_PERIOD = 500;
+const IS_TESTNET = true;
+
 serve(async (req) => {
-  let { chainId, contract, blockPeriod } = await req.json() as RequestBody;
-  if (!chainId || !contract) {
-    throw new Error("Missing 'chainId' or 'contract' in the request body.");
-  }
+  const { contract } = await req.json() as RequestBody;
+  if (!contract) throw new Error("Missing contract");
 
   const contractInfo = contracts[contract];
   if (!contractInfo) throw new Error(`Invalid contract: ${contract}`);
 
-  if (!blockPeriod || isNaN(blockPeriod)) {
-    const defaultBlockPeriods: Record<number, number> = {
-      8453: 500, // Base mainnet
-      84532: 500, // Base testnet
-      42161: 2500, // Arbitrum One
-      421614: 2500, // Arbitrum testnet
-    };
-    blockPeriod = defaultBlockPeriods[chainId] ?? 750;
-  }
-
-  const chain = getChainById(chainId);
-  if (!chain) throw new Error(`Unsupported chainId: ${chainId}`);
-
   const client = createPublicClient({
-    chain,
-    transport: chain === mainnet
-      ? http(`https://mainnet.infura.io/v3/${INFURA_API_KEY}`)
-      : http(),
+    chain: IS_TESTNET ? baseSepolia : base,
+    transport: http(),
   });
 
   const syncStatus = await safeFetchSingle<
     { last_synced_block_number: number }
   >("contract_event_sync_status", (b) =>
     b.select("last_synced_block_number")
-      .eq("chain_id", chainId)
       .eq("contract_address", contractInfo.address));
 
   const currentBlock = await client.getBlockNumber();
   const toBlock = Math.min(
     (syncStatus
       ? syncStatus.last_synced_block_number
-      : contractInfo.deploymentBlock) + blockPeriod,
+      : contractInfo.deploymentBlock) + BLOCK_PERIOD,
     Number(currentBlock),
   );
-  const fromBlock = toBlock - blockPeriod * 2;
+  const fromBlock = toBlock - BLOCK_PERIOD * 2;
 
   const logs = await client.getLogs({
     address: contractInfo.address,
@@ -151,7 +134,6 @@ serve(async (req) => {
     });
 
     events.push({
-      chain_id: chainId,
       contract_address: contractInfo.address,
       block_number: Number(blockNumber),
       log_index: Number(logIndex),
@@ -169,7 +151,6 @@ serve(async (req) => {
   await safeStore("contract_events", (b) => b.upsert(events));
   await safeStore("contract_event_sync_status", (b) =>
     b.upsert({
-      chain_id: chainId,
       contract_address: contractInfo.address,
       last_synced_block_number: toBlock,
     }));

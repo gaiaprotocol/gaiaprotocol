@@ -1,5 +1,4 @@
 clans
-	chain_id - bigint - pk
   id - bigint - pk
 	owner - text - not null
   name - text - not null

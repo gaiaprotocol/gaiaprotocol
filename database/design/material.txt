@@ -1,5 +1,4 @@
 materials
-	chain_id - bigint - pk
   address - text - pk
   game_id - bigint - nullable
 	owner - text - not null
