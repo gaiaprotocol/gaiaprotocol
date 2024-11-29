@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS "public"."games" (
   "id" bigint NOT NULL,
+  "slug" "text" NOT NULL UNIQUE,
   "name" "text" NOT NULL,
   "summary" "text",
   "description" "text",
