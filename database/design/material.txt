@@ -1,6 +1,7 @@
 materials
 	chain_id - bigint - pk
   address - text - pk
+  game_id - bigint - nullable
 	owner - text - not null
   name - text - not null
   symbol - text - not null
@@ -13,6 +14,7 @@ materials
 
 pending_materials
   metadata_hash - text - pk
+  game_id - bigint - nullable
   logo_image_url - text - nullable
   logo_thumbnail_url - text - nullable
   description - text - nullable

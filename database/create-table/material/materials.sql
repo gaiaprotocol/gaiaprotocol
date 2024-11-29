@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS "public"."materials" (
   "chain_id" bigint NOT NULL,
   "address" text NOT NULL,
+  "game_id" bigint,
   "owner" text NOT NULL,
   "name" text NOT NULL,
   "symbol" text NOT NULL,
@@ -22,6 +23,8 @@ ALTER TABLE "public"."materials" ENABLE ROW LEVEL SECURITY;
 GRANT ALL ON TABLE "public"."materials" TO "anon";
 GRANT ALL ON TABLE "public"."materials" TO "authenticated";
 GRANT ALL ON TABLE "public"."materials" TO "service_role";
+
+CREATE INDEX ON "public"."materials" ("game_id");
 
 CREATE POLICY "Allow read access for all users" ON "public"."materials" FOR SELECT USING (true);
 

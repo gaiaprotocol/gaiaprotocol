@@ -35,8 +35,8 @@ BEGIN
   IF NEW.contract_address = '0xc78c189C24379857A80635624877E02306de3EE1' THEN
     IF NEW.name = 'MaterialCreated' THEN
       IF EXISTS (SELECT 1 FROM pending_materials WHERE metadata_hash = NEW.args->>'metadataHash') THEN
-        INSERT INTO materials (chain_id, address, owner, name, symbol, logo_image_url, logo_thumbnail_url, description)
-        SELECT NEW.chain_id, NEW.args->>'materialAddress', NEW.args->>'materialOwner', NEW.args->>'name', NEW.args->>'symbol', pm.logo_image_url, pm.logo_thumbnail_url, pm.description
+        INSERT INTO materials (chain_id, address, game_id, owner, name, symbol, logo_image_url, logo_thumbnail_url, description)
+        SELECT NEW.chain_id, NEW.args->>'materialAddress', NEW.args->>'materialOwner', NEW.args->>'name', NEW.args->>'symbol', pm.game_id, pm.logo_image_url, pm.logo_thumbnail_url, pm.description
         FROM pending_materials pm
         WHERE pm.metadata_hash = NEW.args->>'metadataHash'
         ON CONFLICT (chain_id, address) DO UPDATE
