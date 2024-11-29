@@ -13,7 +13,6 @@ const storage = new Storage({
 const bucket = storage.bucket("gaiaprotocol");
 
 serve(async (req) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
   const formData = await req.formData();
   const file = formData.get("file");
 
@@ -22,7 +21,7 @@ serve(async (req) => {
   }
 
   const fileName = `${crypto.randomUUID()}.${file.name.split(".").pop()}`;
-  const filePath = `profile_images/${walletAddress}/${fileName}`;
+  const filePath = "game_screenshots/" + fileName;
 
   const blob = bucket.file(filePath);
   await blob.save(file.stream() as any, {
