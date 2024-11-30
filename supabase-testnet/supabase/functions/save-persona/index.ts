@@ -15,9 +15,8 @@ interface PersonaEntity {
 
   profile_image_url?: string;
   profile_thumbnail_url?: string;
-
-  nft_address?: string;
-  nft_token_id?: string;
+  profile_nft_address?: string;
+  profile_nft_token_id?: string;
 
   bio?: string;
 }
@@ -53,9 +52,9 @@ serve(async (req) => {
     throw new Error("Invalid wallet address");
   }
 
-  if (personaData.nft_address && personaData.nft_token_id) {
+  if (personaData.profile_nft_address && personaData.profile_nft_token_id) {
     const response = await fetch(
-      `https://api.opensea.io/api/v2/chain/ethereum/contract/${personaData.nft_address}/nfts/${personaData.nft_token_id}`,
+      `https://api.opensea.io/api/v2/chain/ethereum/contract/${personaData.profile_nft_address}/nfts/${personaData.profile_nft_token_id}`,
       { headers: { "X-API-KEY": OPENSEA_API_KEY } },
     );
 
@@ -65,7 +64,9 @@ serve(async (req) => {
         response.status,
         `OpenSea API error: ${errorText}`,
       );
-    } else if (personaData.nft_address || personaData.nft_token_id) {
+    } else if (
+      personaData.profile_nft_address || personaData.profile_nft_token_id
+    ) {
       throw new Error("Invalid NFT ownership");
     }
 

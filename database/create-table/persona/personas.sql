@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS "public"."personas" (
   "is_gaia_name" boolean,
   "profile_image_url" "text",
   "profile_thumbnail_url" "text",
-  "nft_address" "text",
-  "nft_token_id" "text",
+  "profile_nft_address" "text",
+  "profile_nft_token_id" "text",
   "bio" "text",
   "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
   "updated_at" timestamp with time zone

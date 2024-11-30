@@ -6,8 +6,8 @@ personas
   is_gaia_name - boolean - nullable
   profile_image_url - text - nullable
   profile_thumbnail_url - text - nullable
-  nft_address - text - nullable
-  nft_token_id - text - nullable
+  profile_nft_address - text - nullable
+  profile_nft_token_id - text - nullable
   bio - text - nullable
 	created_at - timestampz - now()
 	updated_at - timestampz - nullable
