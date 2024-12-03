@@ -28,7 +28,7 @@ USING (
 )
 WITH CHECK (
   owner = (auth.jwt() ->> 'wallet_address'::text)
-  AND name != ''
+  AND (name IS NOT NULL AND name != '' AND name = trim(name) AND LENGTH(name) <= 100)
   AND (description IS NULL OR LENGTH(description) <= 1000)
   AND id IS NULL
   AND created_at IS NULL
