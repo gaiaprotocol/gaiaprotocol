@@ -8,8 +8,7 @@ CREATE TABLE IF NOT EXISTS "public"."materials" (
   "logo_thumbnail_url" text,
   "description" text,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_at" timestamp with time zone,
-  "deleted_at" timestamp with time zone
+  "updated_at" timestamp with time zone
 );
 
 ALTER TABLE "public"."materials" OWNER TO "postgres";
@@ -26,5 +25,20 @@ GRANT ALL ON TABLE "public"."materials" TO "service_role";
 CREATE INDEX ON "public"."materials" ("game_id");
 
 CREATE POLICY "Allow read access for all users" ON "public"."materials" FOR SELECT USING (true);
+
+CREATE POLICY "Allow update for material owner" ON public.materials FOR UPDATE TO authenticated
+USING (
+  owner = (auth.jwt() ->> 'wallet_address'::text)
+)
+WITH CHECK (
+  owner = (auth.jwt() ->> 'wallet_address'::text)
+  AND (description IS NULL OR LENGTH(description) <= 1000)
+  AND address IS NULL
+  AND game_id IS NULL
+  AND name IS NULL
+  AND symbol IS NULL
+  AND created_at IS NULL
+  AND updated_at IS NULL
+);
 
 CREATE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."materials" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();

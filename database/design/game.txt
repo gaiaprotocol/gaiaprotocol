@@ -1,6 +1,7 @@
 games
 	id - int8 - auto_increment - pk
   slug - text - not null
+	owner - text - not null
   name - text - not null
   summary - text - nullable
   description - text - nullable

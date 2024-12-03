@@ -7,7 +7,6 @@ clans
   description - text - nullable
 	created_at - timestampz - now()
 	updated_at - timestampz - nullable
-  deleted_at - timestampz - nullable
 
 pending_clans
   metadata_hash - text - pk

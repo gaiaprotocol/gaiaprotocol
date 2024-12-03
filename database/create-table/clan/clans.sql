@@ -6,8 +6,7 @@ CREATE TABLE IF NOT EXISTS "public"."clans" (
   "logo_thumbnail_url" text,
   "description" text,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_at" timestamp with time zone,
-  "deleted_at" timestamp with time zone
+  "updated_at" timestamp with time zone
 );
 
 ALTER TABLE "public"."clans" OWNER TO "postgres";
@@ -22,5 +21,18 @@ GRANT ALL ON TABLE "public"."clans" TO "authenticated";
 GRANT ALL ON TABLE "public"."clans" TO "service_role";
 
 CREATE POLICY "Allow read access for all users" ON "public"."clans" FOR SELECT USING (true);
+
+CREATE POLICY "Allow update for clan owner" ON public.clans FOR UPDATE TO authenticated
+USING (
+  owner = (auth.jwt() ->> 'wallet_address'::text)
+)
+WITH CHECK (
+  owner = (auth.jwt() ->> 'wallet_address'::text)
+  AND name != ''
+  AND (description IS NULL OR LENGTH(description) <= 1000)
+  AND id IS NULL
+  AND created_at IS NULL
+  AND updated_at IS NULL
+);
 
 CREATE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."clans" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();

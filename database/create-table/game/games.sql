@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS "public"."games" (
   "id" bigint NOT NULL,
   "slug" "text" NOT NULL UNIQUE,
+  "owner" "text" NOT NULL,
   "name" "text" NOT NULL,
   "summary" "text",
   "description" "text",
@@ -32,5 +33,30 @@ GRANT ALL ON TABLE "public"."games" TO "authenticated";
 GRANT ALL ON TABLE "public"."games" TO "service_role";
 
 CREATE POLICY "Allow read access for all users" ON "public"."games" FOR SELECT USING (true);
+
+CREATE POLICY "Allow insert for authenticated users" ON public.games FOR INSERT TO authenticated
+WITH CHECK (
+  owner = ("auth"."jwt"() ->> 'wallet_address'::text)
+  AND name != ''
+  AND slug != ''
+);
+
+CREATE POLICY "Allow update for game owner" ON public.games FOR UPDATE TO authenticated
+USING (
+  owner = ("auth"."jwt"() ->> 'wallet_address'::text)
+)
+WITH CHECK (
+  owner = ("auth"."jwt"() ->> 'wallet_address'::text)
+  AND name != ''
+  AND slug != ''
+  AND id IS NULL
+  AND created_at IS NULL
+  AND updated_at IS NULL
+);
+
+CREATE POLICY "Allow delete for game owner" ON public.games FOR DELETE TO authenticated
+USING (
+  owner = ("auth"."jwt"() ->> 'wallet_address'::text)
+);
 
 CREATE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."games" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
