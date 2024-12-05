@@ -34,14 +34,14 @@ GRANT ALL ON TABLE "public"."games" TO "service_role";
 
 CREATE POLICY "Allow read access for all users" ON "public"."games" FOR SELECT USING (true);
 
-CREATE POLICY "Allow insert for authenticated users" ON public.games FOR INSERT TO authenticated
+CREATE POLICY "Allow insert for authenticated users" ON public.games FOR INSERT
 WITH CHECK (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
   AND name != ''
   AND slug != ''
 );
 
-CREATE POLICY "Allow update for game owner" ON public.games FOR UPDATE TO authenticated
+CREATE POLICY "Allow update for game owner" ON public.games FOR UPDATE
 USING (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
 )
@@ -54,7 +54,7 @@ WITH CHECK (
   AND updated_at IS NULL
 );
 
-CREATE POLICY "Allow delete for game owner" ON public.games FOR DELETE TO authenticated
+CREATE POLICY "Allow delete for game owner" ON public.games FOR DELETE
 USING (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
 );

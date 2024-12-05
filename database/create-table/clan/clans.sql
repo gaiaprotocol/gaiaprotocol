@@ -22,7 +22,7 @@ GRANT ALL ON TABLE "public"."clans" TO "service_role";
 
 CREATE POLICY "Allow read access for all users" ON "public"."clans" FOR SELECT USING (true);
 
-CREATE POLICY "Allow update for clan owner" ON public.clans FOR UPDATE TO authenticated
+CREATE POLICY "Allow update for clan owner" ON public.clans FOR UPDATE
 USING (
   owner = (auth.jwt() ->> 'wallet_address'::text)
 )

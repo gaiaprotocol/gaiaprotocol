@@ -26,7 +26,7 @@ CREATE INDEX ON "public"."materials" ("game_id");
 
 CREATE POLICY "Allow read access for all users" ON "public"."materials" FOR SELECT USING (true);
 
-CREATE POLICY "Allow update for material owner" ON public.materials FOR UPDATE TO authenticated
+CREATE POLICY "Allow update for material owner" ON public.materials FOR UPDATE
 USING (
   owner = (auth.jwt() ->> 'wallet_address'::text)
 )

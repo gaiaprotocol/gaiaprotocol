@@ -1,8 +1,5 @@
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
-import {
-  safeFetchSingle,
-  safeStore,
-} from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
+import { safeFetchSingle } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
 import { extractWalletAddressFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
 
 interface PendingMaterialData {
@@ -33,8 +30,10 @@ serve(async (req) => {
     throw new Error("Description is too long");
   }
 
-  await safeStore(
+  const data = await safeFetchSingle<{ metadata_hash: string }>(
     "pending_materials",
-    (b) => b.insert(pendingMaterialData),
+    (b) => b.insert(pendingMaterialData).select(),
   );
+
+  return data?.metadata_hash;
 });

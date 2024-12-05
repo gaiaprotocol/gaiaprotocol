@@ -1,5 +1,5 @@
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
-import { safeStore } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
+import { safeFetchSingle } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
 import { extractWalletAddressFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
 
 interface PendingClanData {
@@ -24,8 +24,10 @@ serve(async (req) => {
     throw new Error("Description is too long");
   }
 
-  await safeStore(
+  const data = await safeFetchSingle<{ metadata_hash: string }>(
     "pending_clans",
-    (b) => b.insert(pendingClanData),
+    (b) => b.insert(pendingClanData).select(),
   );
+
+  return data?.metadata_hash;
 });
