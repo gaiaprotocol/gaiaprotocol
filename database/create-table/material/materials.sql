@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS "public"."materials" (
   "logo_thumbnail_url" text,
   "description" text,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_at" timestamp with time zone
+  "updated_at" timestamp with time zone,
+  "deleted_at" timestamp with time zone
 );
 
 ALTER TABLE "public"."materials" OWNER TO "postgres";

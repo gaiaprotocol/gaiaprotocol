@@ -7,7 +7,7 @@ BEGIN
     IF NEW.name = 'ClanCreated' THEN
       IF EXISTS (SELECT 1 FROM pending_clans WHERE metadata_hash = NEW.args->>'metadataHash') THEN
         INSERT INTO clans (id, owner, name, logo_image_url, logo_thumbnail_url, description)
-        SELECT NEW.args->>'clanId', NEW.args->>'clanOwner', pc.name, pc.logo_image_url, pc.logo_thumbnail_url, pc.description
+        SELECT (NEW.args->>'clanId')::bigint, NEW.args->>'clanOwner', pc.name, pc.logo_image_url, pc.logo_thumbnail_url, pc.description
         FROM pending_clans pc
         WHERE pc.metadata_hash = NEW.args->>'metadataHash'
         ON CONFLICT (id) DO UPDATE
@@ -17,7 +17,7 @@ BEGIN
         WHERE metadata_hash = NEW.args->>'metadataHash';
       ELSE
         INSERT INTO clans (id, owner, name)
-        VALUES (NEW.args->>'clanId', NEW.args->>'clanOwner', 'Unnamed Clan')
+        VALUES ((NEW.args->>'clanId')::bigint, NEW.args->>'clanOwner', 'Unnamed Clan')
         ON CONFLICT (id) DO UPDATE
         SET owner = NEW.args->>'clanOwner', deleted_at = NULL;
       END IF;
@@ -25,7 +25,7 @@ BEGIN
     ELSIF NEW.name = 'ClanDeleted' THEN
       UPDATE clans 
       SET deleted_at = NOW()
-      WHERE id = NEW.args->>'clanId'
+      WHERE id = (NEW.args->>'clanId')::bigint
         AND deleted_at IS NULL;
     END IF;
   END IF;

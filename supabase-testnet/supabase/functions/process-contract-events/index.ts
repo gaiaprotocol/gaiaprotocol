@@ -1,7 +1,9 @@
 import {
   Abi,
+  AbiEvent,
   createPublicClient,
   decodeEventLog,
+  hexToString,
   http,
 } from "https://esm.sh/viem@2.21.47";
 import { base, baseSepolia } from "https://esm.sh/viem@2.21.47/chains";
@@ -131,6 +133,10 @@ serve(async (req) => {
       topics,
     });
 
+    const eventAbi = contractInfo.abi.find(
+      (item) => item.type === "event" && item.name === decodedLog.eventName,
+    ) as AbiEvent | undefined;
+
     events.push({
       contract_address: contractInfo.address,
       block_number: Number(blockNumber),
@@ -138,10 +144,24 @@ serve(async (req) => {
       transaction_hash: transactionHash,
       name: decodedLog.eventName as any,
       args: Object.fromEntries(
-        Object.entries(decodedLog.args as any).map(([key, value]) => [
-          key,
-          typeof value === "bigint" ? value.toString() : value,
-        ]),
+        Object.entries(decodedLog.args as any).map(([key, value]) => {
+          const type = eventAbi?.inputs.find((item) => item.name === key)?.type;
+          if (
+            type === "bytes32" && typeof value === "string" &&
+            value.startsWith("0x")
+          ) {
+            return [
+              key,
+              hexToString(value as `0x${string}`, { size: 32 })
+                .replace(/\u0000/g, ""),
+            ];
+          } else {
+            return [
+              key,
+              typeof value === "bigint" ? value.toString() : value,
+            ];
+          }
+        }),
       ),
     });
   }
