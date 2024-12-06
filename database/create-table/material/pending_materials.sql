@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "public"."pending_materials" (
-  "metadata_hash" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+  "metadata_hash" text DEFAULT "generate_metadata_hash"() NOT NULL,
   "game_id" bigint,
   "logo_image_url" text,
   "logo_thumbnail_url" text,

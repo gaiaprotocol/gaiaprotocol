@@ -23,8 +23,6 @@ import TopicSharesArtifact from "../_shared/artifacts/TopicShares.json" with {
   type: "json",
 };
 
-const INFURA_API_KEY = Deno.env.get("INFURA_API_KEY")!;
-
 interface ContractInfo {
   address: `0x${string}`;
   deploymentBlock: number;
