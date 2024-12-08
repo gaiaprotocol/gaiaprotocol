@@ -11,3 +11,12 @@ personas
   bio - text - nullable
 	created_at - timestampz - now()
 	updated_at - timestampz - nullable
+
+persona_holder_chat_messages
+  id - int8 - pk
+  sender - text - not null
+  content - text - not null
+  rich - jsonb - nullable
+  ip_address - inet - not null
+  created_at - timestampz - now()
+  is_edited - bool - nullable
