@@ -34,14 +34,14 @@ GRANT ALL ON TABLE "public"."games" TO "service_role";
 
 CREATE POLICY "Allow read access for all users" ON "public"."games" FOR SELECT USING (true);
 
-CREATE POLICY "Allow insert for authenticated users" ON public.games FOR INSERT
+CREATE POLICY "Allow insert for authenticated users" ON "public"."games" FOR INSERT
 WITH CHECK (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
   AND (name != '' AND name = trim(name) AND LENGTH(name) <= 100)
   AND (slug != '' AND slug = trim(slug) AND LENGTH(slug) <= 100)
 );
 
-CREATE POLICY "Allow update for game owner" ON public.games FOR UPDATE
+CREATE POLICY "Allow update for game owner" ON "public"."games" FOR UPDATE
 USING (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
 )
@@ -81,7 +81,7 @@ GRANT ALL ON FUNCTION "public"."trigger_before_game_update"() TO "service_role";
 
 CREATE TRIGGER "trigger_before_game_update" BEFORE UPDATE ON "public"."games" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_before_game_update"();
 
-CREATE POLICY "Allow delete for game owner" ON public.games FOR DELETE
+CREATE POLICY "Allow delete for game owner" ON 'public'."games" FOR DELETE
 USING (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
 );
