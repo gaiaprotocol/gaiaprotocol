@@ -21,6 +21,7 @@ const DESTINATIONS = {
     "gaiaprotocol-module/src/topic/contracts/artifacts",
   ],
   "gaming/Material": [
+    "gaiaprotocol/supabase-testnet/supabase/functions/_shared/artifacts",
     "gaiaprotocol-module/src/material/contracts/artifacts",
   ],
   "gaming/MaterialFactory": [
