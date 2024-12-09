@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS "public"."games" (
   "id" bigint NOT NULL,
   "slug" "text" NOT NULL UNIQUE,
-  "owner" "text" NOT NULL,
+  "owner" "text" DEFAULT ("auth"."jwt"() ->> 'wallet_address'::text) NOT NULL,
   "name" "text" NOT NULL,
   "summary" "text",
   "description" "text",
@@ -47,16 +47,41 @@ USING (
 )
 WITH CHECK (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
-  AND (name IS NULL OR (name != '' AND name = trim(name) AND LENGTH(name) <= 100))
-  AND (slug IS NULL OR (slug != '' AND slug = trim(slug) AND LENGTH(slug) <= 100))
-  AND id IS NULL
-  AND created_at IS NULL
-  AND updated_at IS NULL
+  AND (name != '' AND name = trim(name) AND LENGTH(name) <= 100)
+  AND (slug != '' AND slug = trim(slug) AND LENGTH(slug) <= 100)
 );
+
+CREATE OR REPLACE FUNCTION "public"."trigger_before_game_update"() RETURNS "trigger"
+LANGUAGE "plpgsql" SECURITY DEFINER
+AS $$BEGIN
+  -- Prevent updates to id, created_at, and updated_at
+  IF NEW.id IS DISTINCT FROM OLD.id THEN
+    NEW.id := OLD.id;
+  END IF;
+
+  IF NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+    NEW.created_at := OLD.created_at;
+  END IF;
+
+  IF NEW.updated_at IS DISTINCT FROM OLD.updated_at THEN
+    NEW.updated_at := OLD.updated_at;
+  END IF;
+
+  -- Automatically set updated_at to current timestamp
+  NEW.updated_at := NOW();
+
+  RETURN NEW;
+END;$$;
+
+ALTER FUNCTION "public"."trigger_before_game_update"() OWNER TO "postgres";
+
+GRANT ALL ON FUNCTION "public"."trigger_before_game_update"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trigger_before_game_update"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trigger_before_game_update"() TO "service_role";
+
+CREATE TRIGGER "trigger_before_game_update" BEFORE UPDATE ON "public"."games" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_before_game_update"();
 
 CREATE POLICY "Allow delete for game owner" ON public.games FOR DELETE
 USING (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
 );
-
-CREATE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."games" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();

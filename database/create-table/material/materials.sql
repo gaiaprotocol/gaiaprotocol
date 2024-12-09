@@ -32,7 +32,7 @@ USING (
   owner = (auth.jwt() ->> 'wallet_address'::text)
 )
 WITH CHECK (
-  owner = (auth.jwt() ->> 'wallet_address'::text)
+  owner IS NULL
   AND (description IS NULL OR LENGTH(description) <= 1000)
   AND address IS NULL
   AND game_id IS NULL
