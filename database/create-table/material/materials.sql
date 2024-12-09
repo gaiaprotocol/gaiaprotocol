@@ -31,7 +31,7 @@ CREATE POLICY "Allow update for material owner" ON public.materials FOR UPDATE
 USING (
   owner = (auth.jwt() ->> 'wallet_address'::text)
 )
-WITH CHECK (
+WITH CHECK ( -- TODO: Need to change
   owner IS NULL
   AND (description IS NULL OR LENGTH(description) <= 1000)
   AND address IS NULL

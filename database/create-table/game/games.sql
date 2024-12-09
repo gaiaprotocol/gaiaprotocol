@@ -37,8 +37,8 @@ CREATE POLICY "Allow read access for all users" ON "public"."games" FOR SELECT U
 CREATE POLICY "Allow insert for authenticated users" ON public.games FOR INSERT
 WITH CHECK (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
-  AND name != ''
-  AND slug != ''
+  AND (name != '' AND name = trim(name) AND LENGTH(name) <= 100)
+  AND (slug != '' AND slug = trim(slug) AND LENGTH(slug) <= 100)
 );
 
 CREATE POLICY "Allow update for game owner" ON public.games FOR UPDATE

@@ -36,11 +36,9 @@ CREATE POLICY "Allow read access for all users" ON public.persona_holder_chat_me
 CREATE POLICY "Allow update for message owner" ON public.persona_holder_chat_messages FOR UPDATE
 USING (sender = ("auth"."jwt"() ->> 'wallet_address'::text))
 WITH CHECK (
-  (
-    ("content" IS NOT NULL AND "content" != '' AND length("content") <= 1000)
-    OR
-    ("content" IS NULL AND "rich" IS NOT NULL)
-  )
+  ("content" IS NOT NULL AND "content" != '' AND length("content") <= 1000)
+  OR
+  ("content" IS NULL AND "rich" IS NOT NULL)
 );
 
 CREATE POLICY "Allow delete for message owner" ON public.persona_holder_chat_messages FOR DELETE
