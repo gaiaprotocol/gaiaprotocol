@@ -80,4 +80,4 @@ GRANT ALL ON FUNCTION "public"."trigger_before_material_update"() TO "anon";
 GRANT ALL ON FUNCTION "public"."trigger_before_material_update"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."trigger_before_material_update"() TO "service_role";
 
-CREATE TRIGGER "trigger_before_material_update" BEFORE UPDATE ON "public"."games" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_before_material_update"();
+CREATE TRIGGER "trigger_before_material_update" BEFORE UPDATE ON "public"."materials" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_before_material_update"();

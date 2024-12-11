@@ -2,7 +2,7 @@ import { ethers, network, upgrades } from "hardhat";
 import "dotenv/config";
 
 async function main() {
-  const deployedProxyAddress = "0xc78c189C24379857A80635624877E02306de3EE1";
+  const deployedProxyAddress = "0xc7B183c8544EbC389337af3Fd17A6DBb2D118816";
 
   const MaterialFactory = await ethers.getContractFactory("MaterialFactory");
   console.log("Upgrading MaterialFactory to", network.name);
