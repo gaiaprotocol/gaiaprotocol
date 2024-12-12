@@ -28,5 +28,5 @@ node --loader ts-node/esm ./copy-abi-files-to-projects.ts
 ## Material Factory
 
 - Base Sepoila:
-  [0x8A89D79282577E78968eECF6a9d5fC1B5FE58AbD](https://sepolia.basescan.org/address/0x8A89D79282577E78968eECF6a9d5fC1B5FE58AbD)
+  [0x5A131Af55290f9796024C33e548E14FDc73F7F5D](https://sepolia.basescan.org/address/0x5A131Af55290f9796024C33e548E14FDc73F7F5D)
 

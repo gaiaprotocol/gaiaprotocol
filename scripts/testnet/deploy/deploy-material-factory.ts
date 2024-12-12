@@ -12,7 +12,7 @@ async function main() {
       account1.address,
       25000000000000000n,
       25000000000000000n,
-      100000000n,
+      10000000n,
     ],
     {
       initializer: "initialize",
