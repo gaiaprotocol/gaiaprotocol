@@ -39,6 +39,7 @@ WITH CHECK (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
   AND (name != '' AND name = trim(name) AND LENGTH(name) <= 100)
   AND (slug != '' AND slug = trim(slug) AND LENGTH(slug) <= 100)
+  AND (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$')
 );
 
 CREATE POLICY "Allow update for game owner" ON "public"."games" FOR UPDATE
@@ -49,6 +50,7 @@ WITH CHECK (
   owner = ("auth"."jwt"() ->> 'wallet_address'::text)
   AND (name != '' AND name = trim(name) AND LENGTH(name) <= 100)
   AND (slug != '' AND slug = trim(slug) AND LENGTH(slug) <= 100)
+  AND (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$')
 );
 
 CREATE OR REPLACE FUNCTION "public"."trigger_before_game_update"() RETURNS "trigger"
