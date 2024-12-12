@@ -3,7 +3,7 @@ import { base, baseSepolia } from "https://esm.sh/viem@2.21.47/chains";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import { safeStore } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
 import MaterialArtifact from "../_shared/artifacts/Material.json" with {
-  type: "json",
+  type: "json"
 };
 
 const IS_TESTNET = true;
@@ -31,6 +31,6 @@ serve(async (req) => {
 
   await safeStore(
     "materials",
-    (b) => b.update({ address, name, symbol }).eq("address", address),
+    (b) => b.update({ name, symbol }).eq("address", address),
   );
 });

@@ -38,7 +38,13 @@ WITH CHECK (
 
 CREATE OR REPLACE FUNCTION "public"."trigger_before_material_update"() RETURNS "trigger"
 LANGUAGE "plpgsql" SECURITY DEFINER
-AS $$BEGIN
+AS $$
+DECLARE
+  is_service_role boolean;
+BEGIN
+  -- Check if current role is service_role
+  is_service_role := (SELECT current_setting('request.jwt.claims', true)::json->>'role' = 'service_role');
+
   -- Prevent updates to address, owner, game_id, name, symbol, created_at, and updated_at
   IF NEW.address IS DISTINCT FROM OLD.address THEN
     NEW.address := OLD.address;
@@ -52,20 +58,23 @@ AS $$BEGIN
     NEW.game_id := OLD.game_id;
   END IF;
 
-  IF NEW.name IS DISTINCT FROM OLD.name THEN
-    NEW.name := OLD.name;
-  END IF;
-
-  IF NEW.symbol IS DISTINCT FROM OLD.symbol THEN
-    NEW.symbol := OLD.symbol;
-  END IF;
-
   IF NEW.created_at IS DISTINCT FROM OLD.created_at THEN
     NEW.created_at := OLD.created_at;
   END IF;
 
   IF NEW.updated_at IS DISTINCT FROM OLD.updated_at THEN
     NEW.updated_at := OLD.updated_at;
+  END IF;
+
+  -- Only prevent name and symbol updates if NOT service_role
+  IF NOT is_service_role THEN
+    IF NEW.name IS DISTINCT FROM OLD.name THEN
+      NEW.name := OLD.name;
+    END IF;
+
+    IF NEW.symbol IS DISTINCT FROM OLD.symbol THEN
+      NEW.symbol := OLD.symbol;
+    END IF;
   END IF;
 
   -- Automatically set updated_at to current timestamp
