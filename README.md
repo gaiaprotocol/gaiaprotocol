@@ -3,11 +3,13 @@
 ```
 cd utils
 node --loader ts-node/esm ./make-new-wallet.ts
+cd ..
 ```
 
 ```
 cd utils
 node --loader ts-node/esm ./copy-abi-files-to-projects.ts
+cd ..
 ```
 
 ## Base Sepoila
