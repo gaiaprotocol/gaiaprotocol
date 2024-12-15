@@ -3,7 +3,7 @@ import { MetamaskClient } from "hardhat_metamask_client";
 import { config } from "chai";
 import { ethers, network } from "hardhat";
 
-const CONSTRUCTION_ADDRESS = "0xA2033689D584EB0F5ca69490b27eF9B274f2F724";
+const CONSTRUCTION_ADDRESS = "0xCb3428bA809B47d0cA7eC766d7d476986CF4fC10";
 
 const materialAddresses = {
   wood: "0xb1e50e052a2c5601BD92fddcc058ADDCFD44c6E7",
