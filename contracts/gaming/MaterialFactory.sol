@@ -42,7 +42,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _protocolFeeRate,
         uint256 _materialOwnerFeeRate,
         uint256 _priceIncrement
-    ) public initializer {
+    ) external initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 

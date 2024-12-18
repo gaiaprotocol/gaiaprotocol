@@ -43,7 +43,7 @@ contract ClanEmblems is HoldingRewardsBase {
         uint256 _clanFeeRate,
         uint256 _priceIncrementPerEmblem,
         address _holdingVerifier
-    ) public initializer {
+    ) external initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 

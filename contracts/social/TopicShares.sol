@@ -44,7 +44,7 @@ contract TopicShares is HoldingRewardsBase {
         uint256 _holderFeeRate,
         uint256 _priceIncrementPerShare,
         address _holdingVerifier
-    ) public initializer {
+    ) external initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 

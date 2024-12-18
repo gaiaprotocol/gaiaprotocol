@@ -32,7 +32,7 @@ contract PersonaFragments is HoldingRewardsBase {
         uint256 _personaOwnerFeeRate,
         uint256 _priceIncrementPerFragment,
         address _holdingVerifier
-    ) public initializer {
+    ) external initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 
