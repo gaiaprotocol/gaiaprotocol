@@ -31,7 +31,7 @@ BEGIN
   END IF;
 
   -- MaterialFactory
-  IF NEW.contract_address = '0x5A131Af55290f9796024C33e548E14FDc73F7F5D' THEN
+  IF NEW.contract_address = '0x9EF42F082360c606d3D0480404F47924323B4D8b' THEN
     IF NEW.name = 'MaterialCreated' THEN
       IF EXISTS (SELECT 1 FROM pending_materials WHERE metadata_hash = NEW.args->>'metadataHash') THEN
         INSERT INTO materials (address, game_id, owner, name, symbol, logo_image_url, logo_thumbnail_url, description)

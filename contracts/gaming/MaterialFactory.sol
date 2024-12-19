@@ -91,37 +91,37 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function getPrice(uint256 supply, uint256 amount) public view returns (uint256) {
-        return PricingLib.getPrice(supply, amount, priceIncrement, 1e18);
+        return PricingLib.getPrice(supply, amount, priceIncrement, 1 ether);
     }
 
     function getBuyPrice(address materialAddress, uint256 amount) public view returns (uint256) {
         Material material = Material(materialAddress);
-        return PricingLib.getBuyPrice(material.totalSupply(), amount, priceIncrement, 1e18);
+        return PricingLib.getBuyPrice(material.totalSupply(), amount, priceIncrement, 1 ether);
     }
 
     function getSellPrice(address materialAddress, uint256 amount) public view returns (uint256) {
         Material material = Material(materialAddress);
-        return PricingLib.getSellPrice(material.totalSupply(), amount, priceIncrement, 1e18);
+        return PricingLib.getSellPrice(material.totalSupply(), amount, priceIncrement, 1 ether);
     }
 
     function getBuyPriceAfterFee(address materialAddress, uint256 amount) external view returns (uint256) {
         uint256 price = getBuyPrice(materialAddress, amount);
-        uint256 protocolFee = (price * protocolFeeRate) / 1e18;
-        uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1e18;
+        uint256 protocolFee = (price * protocolFeeRate) / 1 ether;
+        uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1 ether;
         return price + protocolFee + materialOwnerFee;
     }
 
     function getSellPriceAfterFee(address materialAddress, uint256 amount) external view returns (uint256) {
         uint256 price = getSellPrice(materialAddress, amount);
-        uint256 protocolFee = (price * protocolFeeRate) / 1e18;
-        uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1e18;
+        uint256 protocolFee = (price * protocolFeeRate) / 1 ether;
+        uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1 ether;
         return price - protocolFee - materialOwnerFee;
     }
 
     function executeTrade(address materialAddress, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
         Material material = Material(materialAddress);
-        uint256 protocolFee = (price * protocolFeeRate) / 1e18;
-        uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1e18;
+        uint256 protocolFee = (price * protocolFeeRate) / 1 ether;
+        uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1 ether;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + materialOwnerFee, "Insufficient payment");
