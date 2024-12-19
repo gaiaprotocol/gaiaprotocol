@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
@@ -10,54 +10,42 @@ abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgra
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
-    address payable public treasury;
+    address payable public protocolFeeRecipient;
     uint256 public protocolFeeRate;
     address public holdingVerifier;
 
-    event TreasuryUpdated(address indexed treasury);
+    event ProtocolFeeRecipientUpdated(address indexed protocolFeeRecipient);
     event ProtocolFeeRateUpdated(uint256 rate);
     event HoldingVerifierUpdated(address indexed verifier);
 
-    function setTreasury(address payable _treasury) external onlyOwner {
-        require(_treasury != address(0), "Invalid treasury address");
-        treasury = _treasury;
-        emit TreasuryUpdated(_treasury);
+    function updateProtocolFeeRecipient(address payable _protocolFeeRecipient) external onlyOwner {
+        require(_protocolFeeRecipient != address(0), "Invalid protocol fee recipient");
+        protocolFeeRecipient = _protocolFeeRecipient;
+        emit ProtocolFeeRecipientUpdated(_protocolFeeRecipient);
     }
 
-    function setProtocolFeeRate(uint256 _rate) external onlyOwner {
+    function updateProtocolFeeRate(uint256 _rate) external onlyOwner {
         require(_rate <= 1 ether, "Fee rate exceeds maximum");
         protocolFeeRate = _rate;
         emit ProtocolFeeRateUpdated(_rate);
     }
 
-    function setHoldingVerifier(address _verifier) external onlyOwner {
+    function updateHoldingVerifier(address _verifier) external onlyOwner {
         require(_verifier != address(0), "Invalid verifier address");
         holdingVerifier = _verifier;
         emit HoldingVerifierUpdated(_verifier);
     }
 
-    function parseRewardRatio(
+    function calculateHoldingReward(
+        uint256 baseAmount,
+        uint256 rewardRatio,
         bytes memory signature
-    ) internal pure returns (uint256 rewardRatio, bytes32 originalHash) {
-        require(signature.length == 96, "Invalid signature length");
-
-        assembly {
-            rewardRatio := mload(add(signature, 32))
-            originalHash := mload(add(signature, 64))
-        }
-
-        require(rewardRatio <= 1 ether, "Reward ratio too high");
-        return (rewardRatio, originalHash);
-    }
-
-    function calculateHoldingReward(uint256 baseAmount, bytes memory signature) public view returns (uint256) {
+    ) public view returns (uint256) {
         if (signature.length == 0) return 0;
-
-        (uint256 rewardRatio, bytes32 originalHash) = parseRewardRatio(signature);
+        require(rewardRatio <= 1 ether, "Reward ratio too high");
 
         bytes32 hash = keccak256(abi.encodePacked(baseAmount, rewardRatio));
         bytes32 ethSignedHash = hash.toEthSignedMessageHash();
-        require(originalHash == ethSignedHash, "Invalid signature data");
 
         address signer = ethSignedHash.recover(signature);
         require(signer == holdingVerifier, "Invalid verifier");

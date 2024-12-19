@@ -27,7 +27,7 @@ contract PersonaFragments is HoldingRewardsBase {
     );
 
     function initialize(
-        address payable _treasury,
+        address payable _protocolFeeRecipient,
         uint256 _protocolFeeRate,
         uint256 _personaOwnerFeeRate,
         uint256 _priceIncrementPerFragment,
@@ -36,16 +36,16 @@ contract PersonaFragments is HoldingRewardsBase {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 
-        require(_treasury != address(0), "Invalid treasury");
-        require(_holdingVerifier != address(0), "Invalid verifier");
+        require(_protocolFeeRecipient != address(0), "Invalid protocol fee recipient");
+        require(_holdingVerifier != address(0), "Invalid verifier address");
 
-        treasury = _treasury;
+        protocolFeeRecipient = _protocolFeeRecipient;
         protocolFeeRate = _protocolFeeRate;
         personaOwnerFeeRate = _personaOwnerFeeRate;
         priceIncrementPerFragment = _priceIncrementPerFragment;
         holdingVerifier = _holdingVerifier;
 
-        emit TreasuryUpdated(_treasury);
+        emit ProtocolFeeRecipientUpdated(_protocolFeeRecipient);
         emit ProtocolFeeRateUpdated(_protocolFeeRate);
         emit PersonaOwnerFeeRateUpdated(_personaOwnerFeeRate);
         emit HoldingVerifierUpdated(_holdingVerifier);
@@ -94,17 +94,19 @@ contract PersonaFragments is HoldingRewardsBase {
         uint256 amount,
         uint256 price,
         bool isBuy,
+        uint256 rewardRatio,
         bytes memory holdingRewardSignature
     ) private nonReentrant {
-        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingRewardSignature);
-        uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
+        uint256 rawProtocolFee = (price * protocolFeeRate) / 1 ether;
+        uint256 holdingReward = calculateHoldingReward(rawProtocolFee, rewardRatio, holdingRewardSignature);
+        uint256 protocolFee = rawProtocolFee - holdingReward;
         uint256 personaFee = ((price * personaOwnerFeeRate) / 1 ether) + holdingReward;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + personaFee, "Insufficient payment");
             balance[persona][msg.sender] += amount;
             supply[persona] += amount;
-            treasury.sendValue(protocolFee);
+            protocolFeeRecipient.sendValue(protocolFee);
             payable(persona).sendValue(personaFee);
             if (msg.value > price + protocolFee + personaFee) {
                 payable(msg.sender).sendValue(msg.value - price - protocolFee - personaFee);
@@ -114,20 +116,35 @@ contract PersonaFragments is HoldingRewardsBase {
             balance[persona][msg.sender] -= amount;
             supply[persona] -= amount;
             payable(msg.sender).sendValue(price - protocolFee - personaFee);
-            treasury.sendValue(protocolFee);
+            protocolFeeRecipient.sendValue(protocolFee);
             payable(persona).sendValue(personaFee);
         }
 
-        emit TradeExecuted(msg.sender, persona, isBuy, amount, price, protocolFee, personaFee, holdingReward, supply[persona]);
+        emit TradeExecuted(
+            msg.sender,
+            persona,
+            isBuy,
+            amount,
+            price,
+            protocolFee,
+            personaFee,
+            holdingReward,
+            supply[persona]
+        );
     }
 
-    function buy(address persona, uint256 amount, bytes memory holdingRewardSignature) external payable {
+    function buy(
+        address persona,
+        uint256 amount,
+        uint256 rewardRatio,
+        bytes memory holdingRewardSignature
+    ) external payable {
         uint256 price = getBuyPrice(persona, amount);
-        executeTrade(persona, amount, price, true, holdingRewardSignature);
+        executeTrade(persona, amount, price, true, rewardRatio, holdingRewardSignature);
     }
 
-    function sell(address persona, uint256 amount, bytes memory holdingRewardSignature) external {
+    function sell(address persona, uint256 amount, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
         uint256 price = getSellPrice(persona, amount);
-        executeTrade(persona, amount, price, false, holdingRewardSignature);
+        executeTrade(persona, amount, price, false, rewardRatio, holdingRewardSignature);
     }
 }

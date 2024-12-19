@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -8,7 +8,7 @@ contract GaiaProtocolTokenTestnet is ERC20 {
 
     constructor() ERC20("Gaia Protocol", "GAIA") {}
 
-    function mint(uint256 amount) external {
+    function mintForTest(uint256 amount) external {
         require(amount <= 10_000 * 10 ** DECIMALS, "GaiaProtocolTokenTestnet: max mint amount is 10,000");
         _mint(msg.sender, amount);
     }

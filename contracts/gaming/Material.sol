@@ -12,8 +12,8 @@ contract Material is ERC20Permit, Ownable2Step {
 
     mapping(address => bool) public whitelist;
 
-    event NameSet(string name);
-    event SymbolSet(string symbol);
+    event NameUpdated(string name);
+    event SymbolUpdated(string symbol);
     event WhitelistAdded(address indexed account);
     event WhitelistRemoved(address indexed account);
 
@@ -26,8 +26,8 @@ contract Material is ERC20Permit, Ownable2Step {
         _name = name_;
         _symbol = symbol_;
 
-        emit NameSet(name_);
-        emit SymbolSet(symbol_);
+        emit NameUpdated(name_);
+        emit SymbolUpdated(symbol_);
     }
 
     function name() public view virtual override returns (string memory) {
@@ -38,14 +38,14 @@ contract Material is ERC20Permit, Ownable2Step {
         return _symbol;
     }
 
-    function setName(string memory name_) external onlyOwner {
+    function updateName(string memory name_) external onlyOwner {
         _name = name_;
-        emit NameSet(name_);
+        emit NameUpdated(name_);
     }
 
-    function setSymbol(string memory symbol_) external onlyOwner {
+    function updateSymbol(string memory symbol_) external onlyOwner {
         _symbol = symbol_;
-        emit SymbolSet(symbol_);
+        emit SymbolUpdated(symbol_);
     }
 
     modifier onlyFactory() {
@@ -61,16 +61,20 @@ contract Material is ERC20Permit, Ownable2Step {
         _burn(from, amount);
     }
 
-    function addToWhitelist(address _address) external onlyOwner {
-        require(!whitelist[_address], "Address is already whitelisted");
-        whitelist[_address] = true;
-        emit WhitelistAdded(_address);
+    function addToWhitelist(address[] calldata _addresses) external onlyOwner {
+        for (uint256 i = 0; i < _addresses.length; i++) {
+            require(!whitelist[_addresses[i]], "Address is already whitelisted");
+            whitelist[_addresses[i]] = true;
+            emit WhitelistAdded(_addresses[i]);
+        }
     }
 
-    function removeFromWhitelist(address _address) external onlyOwner {
-        require(whitelist[_address], "Address is not whitelisted");
-        whitelist[_address] = false;
-        emit WhitelistRemoved(_address);
+    function removeFromWhitelist(address[] calldata _addresses) external onlyOwner {
+        for (uint256 i = 0; i < _addresses.length; i++) {
+            require(whitelist[_addresses[i]], "Address is not whitelisted");
+            whitelist[_addresses[i]] = false;
+            emit WhitelistRemoved(_addresses[i]);
+        }
     }
 
     function isWhitelisted(address _address) public view returns (bool) {

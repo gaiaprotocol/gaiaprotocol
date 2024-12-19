@@ -38,7 +38,7 @@ contract ClanEmblems is HoldingRewardsBase {
     );
 
     function initialize(
-        address payable _treasury,
+        address payable _protocolFeeRecipient,
         uint256 _protocolFeeRate,
         uint256 _clanFeeRate,
         uint256 _priceIncrementPerEmblem,
@@ -47,16 +47,16 @@ contract ClanEmblems is HoldingRewardsBase {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 
-        require(_treasury != address(0), "Invalid treasury");
-        require(_holdingVerifier != address(0), "Invalid verifier");
+        require(_protocolFeeRecipient != address(0), "Invalid protocol fee recipient");
+        require(_holdingVerifier != address(0), "Invalid verifier address");
 
-        treasury = _treasury;
+        protocolFeeRecipient = _protocolFeeRecipient;
         protocolFeeRate = _protocolFeeRate;
         clanFeeRate = _clanFeeRate;
         priceIncrementPerEmblem = _priceIncrementPerEmblem;
         holdingVerifier = _holdingVerifier;
 
-        emit TreasuryUpdated(_treasury);
+        emit ProtocolFeeRecipientUpdated(_protocolFeeRecipient);
         emit ProtocolFeeRateUpdated(_protocolFeeRate);
         emit ClanFeeRateUpdated(_clanFeeRate);
         emit HoldingVerifierUpdated(_holdingVerifier);
@@ -137,19 +137,21 @@ contract ClanEmblems is HoldingRewardsBase {
         uint256 amount,
         uint256 price,
         bool isBuy,
+        uint256 rewardRatio,
         bytes memory holdingRewardSignature
     ) private nonReentrant {
         require(clans[clanId].owner != address(0), "Clan does not exist");
 
-        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingRewardSignature);
-        uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
+        uint256 rawProtocolFee = (price * protocolFeeRate) / 1 ether;
+        uint256 holdingReward = calculateHoldingReward(rawProtocolFee, rewardRatio, holdingRewardSignature);
+        uint256 protocolFee = rawProtocolFee - holdingReward;
         uint256 clanFee = ((price * clanFeeRate) / 1 ether) + holdingReward;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + clanFee, "Insufficient payment");
             balance[clanId][msg.sender] += amount;
             supply[clanId] += amount;
-            treasury.sendValue(protocolFee);
+            protocolFeeRecipient.sendValue(protocolFee);
             clans[clanId].accumulatedFees += clanFee;
             if (msg.value > price + protocolFee + clanFee) {
                 payable(msg.sender).sendValue(msg.value - price - protocolFee - clanFee);
@@ -159,7 +161,7 @@ contract ClanEmblems is HoldingRewardsBase {
             balance[clanId][msg.sender] -= amount;
             supply[clanId] -= amount;
             payable(msg.sender).sendValue(price - protocolFee - clanFee);
-            treasury.sendValue(protocolFee);
+            protocolFeeRecipient.sendValue(protocolFee);
             clans[clanId].accumulatedFees += clanFee;
         }
 
@@ -176,13 +178,18 @@ contract ClanEmblems is HoldingRewardsBase {
         );
     }
 
-    function buy(uint256 clanId, uint256 amount, bytes memory holdingRewardSignature) external payable {
+    function buy(
+        uint256 clanId,
+        uint256 amount,
+        uint256 rewardRatio,
+        bytes memory holdingRewardSignature
+    ) external payable {
         uint256 price = getBuyPrice(clanId, amount);
-        executeTrade(clanId, amount, price, true, holdingRewardSignature);
+        executeTrade(clanId, amount, price, true, rewardRatio, holdingRewardSignature);
     }
 
-    function sell(uint256 clanId, uint256 amount, bytes memory holdingRewardSignature) external {
+    function sell(uint256 clanId, uint256 amount, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
         uint256 price = getSellPrice(clanId, amount);
-        executeTrade(clanId, amount, price, false, holdingRewardSignature);
+        executeTrade(clanId, amount, price, false, rewardRatio, holdingRewardSignature);
     }
 }

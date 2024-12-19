@@ -11,11 +11,11 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using Address for address payable;
 
     uint256 public priceIncrement;
+    address payable public protocolFeeRecipient;
     uint256 public protocolFeeRate;
     uint256 public materialOwnerFeeRate;
-    address payable public treasury;
 
-    event TreasuryUpdated(address indexed treasury);
+    event ProtocolFeeRecipientUpdated(address indexed protocolFeeRecipient);
     event ProtocolFeeRateUpdated(uint256 rate);
     event MaterialOwnerFeeRateUpdated(uint256 rate);
     event MaterialCreated(
@@ -38,7 +38,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     );
 
     function initialize(
-        address payable _treasury,
+        address payable _protocolFeeRecipient,
         uint256 _protocolFeeRate,
         uint256 _materialOwnerFeeRate,
         uint256 _priceIncrement
@@ -46,29 +46,29 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 
-        treasury = _treasury;
+        protocolFeeRecipient = _protocolFeeRecipient;
         protocolFeeRate = _protocolFeeRate;
         materialOwnerFeeRate = _materialOwnerFeeRate;
         priceIncrement = _priceIncrement;
 
-        emit TreasuryUpdated(_treasury);
+        emit ProtocolFeeRecipientUpdated(_protocolFeeRecipient);
         emit ProtocolFeeRateUpdated(_protocolFeeRate);
         emit MaterialOwnerFeeRateUpdated(_materialOwnerFeeRate);
     }
 
-    function setTreasury(address payable _treasury) external onlyOwner {
-        require(_treasury != address(0), "Invalid treasury address");
-        treasury = _treasury;
-        emit TreasuryUpdated(_treasury);
+    function updateProtocolFeeRecipient(address payable _protocolFeeRecipient) external onlyOwner {
+        require(_protocolFeeRecipient != address(0), "Invalid protocol fee recipient address");
+        protocolFeeRecipient = _protocolFeeRecipient;
+        emit ProtocolFeeRecipientUpdated(_protocolFeeRecipient);
     }
 
-    function setProtocolFeeRate(uint256 _rate) external onlyOwner {
+    function updateProtocolFeeRate(uint256 _rate) external onlyOwner {
         require(_rate <= 1 ether, "Fee rate exceeds maximum");
         protocolFeeRate = _rate;
         emit ProtocolFeeRateUpdated(_rate);
     }
 
-    function setMaterialOwnerFeeRate(uint256 _rate) external onlyOwner {
+    function updateMaterialOwnerFeeRate(uint256 _rate) external onlyOwner {
         require(_rate <= 1 ether, "Fee rate exceeds maximum");
         materialOwnerFeeRate = _rate;
         emit MaterialOwnerFeeRateUpdated(_rate);
@@ -131,7 +131,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         if (isBuy) {
             require(msg.value >= price + protocolFee + materialOwnerFee, "Insufficient payment");
             material.mint(msg.sender, amount);
-            treasury.sendValue(protocolFee);
+            protocolFeeRecipient.sendValue(protocolFee);
             payable(material.owner()).sendValue(materialOwnerFee);
             if (msg.value > price + protocolFee + materialOwnerFee) {
                 uint256 refund = msg.value - price - protocolFee - materialOwnerFee;
@@ -142,7 +142,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             material.burn(msg.sender, amount);
             uint256 netAmount = price - protocolFee - materialOwnerFee;
             payable(msg.sender).sendValue(netAmount);
-            treasury.sendValue(protocolFee);
+            protocolFeeRecipient.sendValue(protocolFee);
             payable(material.owner()).sendValue(materialOwnerFee);
         }
 

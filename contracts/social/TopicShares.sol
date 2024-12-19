@@ -39,7 +39,7 @@ contract TopicShares is HoldingRewardsBase {
     event HolderFeeClaimed(address indexed holder, bytes32 indexed topic, uint256 fee);
 
     function initialize(
-        address payable _treasury,
+        address payable _protocolFeeRecipient,
         uint256 _protocolFeeRate,
         uint256 _holderFeeRate,
         uint256 _priceIncrementPerShare,
@@ -48,16 +48,16 @@ contract TopicShares is HoldingRewardsBase {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
 
-        require(_treasury != address(0), "Invalid treasury");
-        require(_holdingVerifier != address(0), "Invalid verifier");
+        require(_protocolFeeRecipient != address(0), "Invalid protocol fee recipient");
+        require(_holdingVerifier != address(0), "Invalid verifier address");
 
-        treasury = _treasury;
+        protocolFeeRecipient = _protocolFeeRecipient;
         protocolFeeRate = _protocolFeeRate;
         holderFeeRate = _holderFeeRate;
         priceIncrementPerShare = _priceIncrementPerShare;
         holdingVerifier = _holdingVerifier;
 
-        emit TreasuryUpdated(_treasury);
+        emit ProtocolFeeRecipientUpdated(_protocolFeeRecipient);
         emit ProtocolFeeRateUpdated(_protocolFeeRate);
         emit HolderFeeRateUpdated(_holderFeeRate);
         emit HoldingVerifierUpdated(_holdingVerifier);
@@ -100,25 +100,34 @@ contract TopicShares is HoldingRewardsBase {
         return price - protocolFee - holderFee;
     }
 
-    function buy(bytes32 topic, uint256 amount, bytes memory holdingRewardSignature) external payable nonReentrant {
+    function buy(
+        bytes32 topic,
+        uint256 amount,
+        uint256 rewardRatio,
+        bytes memory holdingRewardSignature
+    ) external payable nonReentrant {
+        Topic memory t = topics[topic];
         uint256 price = getBuyPrice(topic, amount);
-        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingRewardSignature);
-        uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
+
+        uint256 rawProtocolFee = (price * protocolFeeRate) / 1 ether;
+        uint256 holdingReward = calculateHoldingReward(rawProtocolFee, rewardRatio, holdingRewardSignature);
+        uint256 protocolFee = rawProtocolFee - holdingReward;
         uint256 holderFee = ((price * holderFeeRate) / 1 ether) + holdingReward;
 
         require(msg.value >= price + protocolFee + holderFee, "Insufficient payment");
 
-        Topic memory t = topics[topic];
-        Holder storage holder = holders[topic][msg.sender];
-
-        holder.balance += amount;
-        holder.feeDebt += int256((amount * t.accFeePerUnit) / ACC_FEE_PRECISION);
+        if (t.supply > 0) {
+            t.accFeePerUnit += (holderFee * ACC_FEE_PRECISION) / t.supply;
+        }
 
         t.supply += amount;
-        t.accFeePerUnit += (holderFee * ACC_FEE_PRECISION) / t.supply;
         topics[topic] = t;
 
-        treasury.sendValue(protocolFee);
+        Holder storage h = holders[topic][msg.sender];
+        h.balance += amount;
+        h.feeDebt += int256((amount * t.accFeePerUnit) / ACC_FEE_PRECISION);
+
+        protocolFeeRecipient.sendValue(protocolFee);
         if (msg.value > price + protocolFee + holderFee) {
             payable(msg.sender).sendValue(msg.value - price - protocolFee - holderFee);
         }
@@ -126,26 +135,39 @@ contract TopicShares is HoldingRewardsBase {
         emit TradeExecuted(msg.sender, topic, true, amount, price, protocolFee, holderFee, holdingReward, t.supply);
     }
 
-    function sell(bytes32 topic, uint256 amount, bytes memory holdingRewardSignature) external nonReentrant {
-        uint256 price = getSellPrice(topic, amount);
-        uint256 holdingReward = calculateHoldingReward((price * protocolFeeRate) / 1 ether, holdingRewardSignature);
-        uint256 protocolFee = ((price * protocolFeeRate) / 1 ether) - holdingReward;
-        uint256 holderFee = ((price * holderFeeRate) / 1 ether) + holdingReward;
-
+    function sell(
+        bytes32 topic,
+        uint256 amount,
+        uint256 rewardRatio,
+        bytes memory holdingRewardSignature
+    ) external nonReentrant {
         Topic memory t = topics[topic];
         Holder storage holder = holders[topic][msg.sender];
 
         require(holder.balance >= amount, "Insufficient balance");
 
-        t.accFeePerUnit += (holderFee * ACC_FEE_PRECISION) / t.supply;
-        t.supply -= amount;
-        topics[topic] = t;
+        uint256 price = getSellPrice(topic, amount);
+
+        uint256 rawProtocolFee = (price * protocolFeeRate) / 1 ether;
+        uint256 holdingReward = calculateHoldingReward(rawProtocolFee, rewardRatio, holdingRewardSignature);
+        uint256 protocolFee = rawProtocolFee - holdingReward;
+        uint256 holderFee = ((price * holderFeeRate) / 1 ether) + holdingReward;
 
         holder.balance -= amount;
-        holder.feeDebt -= int256((amount * t.accFeePerUnit) / ACC_FEE_PRECISION);
+        t.supply -= amount;
 
-        payable(msg.sender).sendValue(price - protocolFee - holderFee);
-        treasury.sendValue(protocolFee);
+        if (t.supply > 0) {
+            t.accFeePerUnit += (holderFee * ACC_FEE_PRECISION) / t.supply;
+            topics[topic] = t;
+
+            payable(msg.sender).sendValue(price - protocolFee - holderFee);
+            protocolFeeRecipient.sendValue(protocolFee);
+        } else {
+            topics[topic] = t;
+
+            payable(msg.sender).sendValue(price - protocolFee - holderFee);
+            protocolFeeRecipient.sendValue(protocolFee + holderFee);
+        }
 
         emit TradeExecuted(msg.sender, topic, false, amount, price, protocolFee, holderFee, holdingReward, t.supply);
     }
