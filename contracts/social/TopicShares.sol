@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "./HoldingRewardsBase.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "./HoldingRewardsBase.sol";
+import "../libraries/PricingLib.sol";
 
 contract TopicShares is HoldingRewardsBase {
     using Address for address payable;
@@ -70,20 +71,15 @@ contract TopicShares is HoldingRewardsBase {
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrementPerShare + (_supply * priceIncrementPerShare);
-        uint256 endSupply = _supply + amount;
-        uint256 endPriceWei = priceIncrementPerShare + (endSupply * priceIncrementPerShare);
-        uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
-        uint256 totalCostWei = averagePriceWei * amount;
-        return totalCostWei;
+        return PricingLib.getPrice(_supply, amount, priceIncrementPerShare, 1);
     }
 
     function getBuyPrice(bytes32 topic, uint256 amount) public view returns (uint256) {
-        return getPrice(topics[topic].supply, amount);
+        return PricingLib.getBuyPrice(topics[topic].supply, amount, priceIncrementPerShare, 1);
     }
 
     function getSellPrice(bytes32 topic, uint256 amount) public view returns (uint256) {
-        return getPrice(topics[topic].supply - amount, amount);
+        return PricingLib.getSellPrice(topics[topic].supply, amount, priceIncrementPerShare, 1);
     }
 
     function getBuyPriceAfterFee(bytes32 topic, uint256 amount) external view returns (uint256) {

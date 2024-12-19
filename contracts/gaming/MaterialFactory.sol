@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "./Material.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "./Material.sol";
+import "../libraries/PricingLib.sol";
 
 contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using Address for address payable;
@@ -90,23 +91,17 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function getPrice(uint256 supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrement + (supply * priceIncrement) / 1e18;
-        uint256 endSupply = supply + amount;
-        uint256 endPriceWei = priceIncrement + (endSupply * priceIncrement) / 1e18;
-        uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
-        uint256 totalCostWei = (averagePriceWei * amount) / 1e18;
-        return totalCostWei;
+        return PricingLib.getPrice(supply, amount, priceIncrement, 1e18);
     }
 
     function getBuyPrice(address materialAddress, uint256 amount) public view returns (uint256) {
         Material material = Material(materialAddress);
-        return getPrice(material.totalSupply(), amount);
+        return PricingLib.getBuyPrice(material.totalSupply(), amount, priceIncrement, 1e18);
     }
 
     function getSellPrice(address materialAddress, uint256 amount) public view returns (uint256) {
         Material material = Material(materialAddress);
-        uint256 supplyAfterSale = material.totalSupply() - amount;
-        return getPrice(supplyAfterSale, amount);
+        return PricingLib.getSellPrice(material.totalSupply(), amount, priceIncrement, 1e18);
     }
 
     function getBuyPriceAfterFee(address materialAddress, uint256 amount) external view returns (uint256) {

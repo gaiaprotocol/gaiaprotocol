@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "./HoldingRewardsBase.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "./HoldingRewardsBase.sol";
+import "../libraries/PricingLib.sol";
 
 contract ClanEmblems is HoldingRewardsBase {
     using Address for address payable;
@@ -101,21 +102,15 @@ contract ClanEmblems is HoldingRewardsBase {
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrementPerEmblem + (_supply * priceIncrementPerEmblem);
-        uint256 endSupply = _supply + amount;
-        uint256 endPriceWei = priceIncrementPerEmblem + (endSupply * priceIncrementPerEmblem);
-        uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
-        uint256 totalCostWei = averagePriceWei * amount;
-        return totalCostWei;
+        return PricingLib.getPrice(_supply, amount, priceIncrementPerEmblem, 1);
     }
 
     function getBuyPrice(uint256 clanId, uint256 amount) public view returns (uint256) {
-        return getPrice(supply[clanId], amount);
+        return PricingLib.getBuyPrice(supply[clanId], amount, priceIncrementPerEmblem, 1);
     }
 
     function getSellPrice(uint256 clanId, uint256 amount) public view returns (uint256) {
-        uint256 supplyAfterSale = supply[clanId] - amount;
-        return getPrice(supplyAfterSale, amount);
+        return PricingLib.getSellPrice(supply[clanId], amount, priceIncrementPerEmblem, 1);
     }
 
     function getBuyPriceAfterFee(uint256 clanId, uint256 amount) external view returns (uint256) {

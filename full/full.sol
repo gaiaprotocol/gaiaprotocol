@@ -3,29 +3,6 @@
 
   
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-
-contract GaiaProtocolToken is ERC20Permit {
-    constructor() ERC20("Gaia Protocol", "GAIA") ERC20Permit("Gaia Protocol") {
-        _mint(msg.sender, 100_000_000 * 10 ** decimals());
-    }
-}
-
-
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-contract GaiaProtocolTokenTestnet is ERC20 {
-    uint8 private constant DECIMALS = 18;
-
-    constructor() ERC20("Gaia Protocol", "GAIA") {}
-
-    function mintForTest(uint256 amount) external {
-        require(amount <= 10_000 * 10 ** DECIMALS, "GaiaProtocolTokenTestnet: max mint amount is 10,000");
-        _mint(msg.sender, amount);
-    }
-}
-
-
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 contract Material is ERC20Permit, Ownable2Step {
@@ -203,23 +180,17 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     function getPrice(uint256 supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrement + (supply * priceIncrement) / 1e18;
-        uint256 endSupply = supply + amount;
-        uint256 endPriceWei = priceIncrement + (endSupply * priceIncrement) / 1e18;
-        uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
-        uint256 totalCostWei = (averagePriceWei * amount) / 1e18;
-        return totalCostWei;
+        return PricingLib.getPrice(supply, amount, priceIncrement, 1e18);
     }
 
     function getBuyPrice(address materialAddress, uint256 amount) public view returns (uint256) {
         Material material = Material(materialAddress);
-        return getPrice(material.totalSupply(), amount);
+        return PricingLib.getBuyPrice(material.totalSupply(), amount, priceIncrement, 1e18);
     }
 
     function getSellPrice(address materialAddress, uint256 amount) public view returns (uint256) {
         Material material = Material(materialAddress);
-        uint256 supplyAfterSale = material.totalSupply() - amount;
-        return getPrice(supplyAfterSale, amount);
+        return PricingLib.getSellPrice(material.totalSupply(), amount, priceIncrement, 1e18);
     }
 
     function getBuyPriceAfterFee(address materialAddress, uint256 amount) external view returns (uint256) {
@@ -279,6 +250,65 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     function sell(address materialAddress, uint256 amount) external {
         uint256 price = getSellPrice(materialAddress, amount);
         executeTrade(materialAddress, amount, price, false);
+    }
+}
+
+
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+
+contract GaiaProtocolToken is ERC20Permit {
+    constructor() ERC20("Gaia Protocol", "GAIA") ERC20Permit("Gaia Protocol") {
+        _mint(msg.sender, 100_000_000 * 10 ** decimals());
+    }
+}
+
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract GaiaProtocolTokenTestnet is ERC20 {
+    uint8 private constant DECIMALS = 18;
+
+    constructor() ERC20("Gaia Protocol", "GAIA") {}
+
+    function mintForTest(uint256 amount) external {
+        require(amount <= 10_000 * 10 ** DECIMALS, "GaiaProtocolTokenTestnet: max mint amount is 10,000");
+        _mint(msg.sender, amount);
+    }
+}
+
+
+library PricingLib {
+    function getPrice(
+        uint256 supply,
+        uint256 amount,
+        uint256 priceIncrement,
+        uint256 scaleFactor
+    ) internal pure returns (uint256) {
+        uint256 startPrice = priceIncrement + (supply * priceIncrement) / scaleFactor;
+        uint256 endSupply = supply + amount;
+        uint256 endPrice = priceIncrement + (endSupply * priceIncrement) / scaleFactor;
+        uint256 averagePrice = (startPrice + endPrice) / 2;
+        uint256 totalCost = (averagePrice * amount) / scaleFactor;
+        return totalCost;
+    }
+
+    function getBuyPrice(
+        uint256 supply,
+        uint256 amount,
+        uint256 priceIncrement,
+        uint256 scaleFactor
+    ) internal pure returns (uint256) {
+        return getPrice(supply, amount, priceIncrement, scaleFactor);
+    }
+
+    function getSellPrice(
+        uint256 supply,
+        uint256 amount,
+        uint256 priceIncrement,
+        uint256 scaleFactor
+    ) internal pure returns (uint256) {
+        uint256 supplyAfterSale = supply - amount;
+        return getPrice(supplyAfterSale, amount, priceIncrement, scaleFactor);
     }
 }
 
@@ -382,21 +412,15 @@ contract ClanEmblems is HoldingRewardsBase {
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrementPerEmblem + (_supply * priceIncrementPerEmblem);
-        uint256 endSupply = _supply + amount;
-        uint256 endPriceWei = priceIncrementPerEmblem + (endSupply * priceIncrementPerEmblem);
-        uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
-        uint256 totalCostWei = averagePriceWei * amount;
-        return totalCostWei;
+        return PricingLib.getPrice(_supply, amount, priceIncrementPerEmblem, 1);
     }
 
     function getBuyPrice(uint256 clanId, uint256 amount) public view returns (uint256) {
-        return getPrice(supply[clanId], amount);
+        return PricingLib.getBuyPrice(supply[clanId], amount, priceIncrementPerEmblem, 1);
     }
 
     function getSellPrice(uint256 clanId, uint256 amount) public view returns (uint256) {
-        uint256 supplyAfterSale = supply[clanId] - amount;
-        return getPrice(supplyAfterSale, amount);
+        return PricingLib.getSellPrice(supply[clanId], amount, priceIncrementPerEmblem, 1);
     }
 
     function getBuyPriceAfterFee(uint256 clanId, uint256 amount) external view returns (uint256) {
@@ -479,9 +503,11 @@ contract ClanEmblems is HoldingRewardsBase {
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
 
     address payable public protocolFeeRecipient;
     uint256 public protocolFeeRate;
@@ -518,7 +544,7 @@ abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgra
         require(rewardRatio <= 1 ether, "Reward ratio too high");
 
         bytes32 hash = keccak256(abi.encodePacked(baseAmount, rewardRatio));
-        bytes32 ethSignedHash = ECDSA.toEthSignedMessageHash(hash);
+        bytes32 ethSignedHash = hash.toEthSignedMessageHash();
 
         address signer = ethSignedHash.recover(signature);
         require(signer == holdingVerifier, "Invalid verifier");
@@ -584,21 +610,15 @@ contract PersonaFragments is HoldingRewardsBase {
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrementPerFragment + (_supply * priceIncrementPerFragment);
-        uint256 endSupply = _supply + amount;
-        uint256 endPriceWei = priceIncrementPerFragment + (endSupply * priceIncrementPerFragment);
-        uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
-        uint256 totalCostWei = averagePriceWei * amount;
-        return totalCostWei;
+        return PricingLib.getPrice(_supply, amount, priceIncrementPerFragment, 1);
     }
 
     function getBuyPrice(address persona, uint256 amount) public view returns (uint256) {
-        return getPrice(supply[persona], amount);
+        return PricingLib.getBuyPrice(supply[persona], amount, priceIncrementPerFragment, 1);
     }
 
     function getSellPrice(address persona, uint256 amount) public view returns (uint256) {
-        uint256 supplyAfterSale = supply[persona] - amount;
-        return getPrice(supplyAfterSale, amount);
+        return PricingLib.getSellPrice(supply[persona], amount, priceIncrementPerFragment, 1);
     }
 
     function getBuyPriceAfterFee(address persona, uint256 amount) external view returns (uint256) {
@@ -744,20 +764,15 @@ contract TopicShares is HoldingRewardsBase {
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
-        uint256 startPriceWei = priceIncrementPerShare + (_supply * priceIncrementPerShare);
-        uint256 endSupply = _supply + amount;
-        uint256 endPriceWei = priceIncrementPerShare + (endSupply * priceIncrementPerShare);
-        uint256 averagePriceWei = (startPriceWei + endPriceWei) / 2;
-        uint256 totalCostWei = averagePriceWei * amount;
-        return totalCostWei;
+        return PricingLib.getPrice(_supply, amount, priceIncrementPerShare, 1);
     }
 
     function getBuyPrice(bytes32 topic, uint256 amount) public view returns (uint256) {
-        return getPrice(topics[topic].supply, amount);
+        return PricingLib.getBuyPrice(topics[topic].supply, amount, priceIncrementPerShare, 1);
     }
 
     function getSellPrice(bytes32 topic, uint256 amount) public view returns (uint256) {
-        return getPrice(topics[topic].supply - amount, amount);
+        return PricingLib.getSellPrice(topics[topic].supply, amount, priceIncrementPerShare, 1);
     }
 
     function getBuyPriceAfterFee(bytes32 topic, uint256 amount) external view returns (uint256) {
