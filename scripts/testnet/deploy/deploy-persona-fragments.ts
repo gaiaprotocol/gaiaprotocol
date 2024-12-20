@@ -18,7 +18,6 @@ async function main() {
     ],
     {
       initializer: "initialize",
-      initialOwner: account1.address,
     },
   );
   await contract.waitForDeployment();
