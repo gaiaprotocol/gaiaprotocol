@@ -54,10 +54,6 @@ BEGIN
     NEW.owner := OLD.owner;
   END IF;
 
-  IF NEW.game_id IS DISTINCT FROM OLD.game_id THEN
-    NEW.game_id := OLD.game_id;
-  END IF;
-
   IF NEW.created_at IS DISTINCT FROM OLD.created_at THEN
     NEW.created_at := OLD.created_at;
   END IF;
@@ -68,6 +64,10 @@ BEGIN
 
   -- Only prevent name and symbol updates if NOT service_role
   IF NOT is_service_role THEN
+    IF NEW.game_id IS DISTINCT FROM OLD.game_id THEN
+      NEW.game_id := OLD.game_id;
+    END IF;
+
     IF NEW.name IS DISTINCT FROM OLD.name THEN
       NEW.name := OLD.name;
     END IF;
