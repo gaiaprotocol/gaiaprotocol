@@ -98,7 +98,7 @@ serve(async (req) => {
       }
     } else {
       if (personaData.name.length > 100) throw new Error("Name is too long");
-      if (!isValidName(personaData.name)) throw new Error("Invalid name");
+      //if (!isValidName(personaData.name)) throw new Error("Invalid name");
       if (personaData.name.includes(".")) {
         throw new Error("Name cannot contain periods");
       }
