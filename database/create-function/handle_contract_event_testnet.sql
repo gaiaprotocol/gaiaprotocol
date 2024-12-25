@@ -3,7 +3,7 @@ LANGUAGE "plpgsql" SECURITY DEFINER
 AS $$
 BEGIN
   -- ClanEmblems
-  IF NEW.contract_address = '0x9322C4A5E5725262C9960aDE87259d1cE2812412' THEN
+  /*IF NEW.contract_address = '0x9322C4A5E5725262C9960aDE87259d1cE2812412' THEN
     IF NEW.name = 'ClanCreated' THEN
       IF EXISTS (SELECT 1 FROM pending_clans WHERE metadata_hash = NEW.args->>'metadataHash') THEN
         INSERT INTO clans (id, owner, name, logo_image_url, logo_thumbnail_url, description)
@@ -28,7 +28,7 @@ BEGIN
       WHERE id = (NEW.args->>'clanId')::bigint
         AND deleted_at IS NULL;
     END IF;
-  END IF;
+  END IF;*/
 
   -- MaterialFactory
   IF NEW.contract_address = '0x9EF42F082360c606d3D0480404F47924323B4D8b' THEN

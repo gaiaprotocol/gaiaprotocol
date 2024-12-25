@@ -25,3 +25,11 @@ supabase functions deploy upload-material-logo
 supabase functions deploy create-pending-material-data
 supabase functions deploy sync-material-metadata-to-db
 ```
+
+## Postgres Cron
+```sql
+select * from cron.job;
+select * from cron.job_run_details;
+
+SELECT cron.unschedule(1);
+```
