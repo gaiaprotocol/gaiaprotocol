@@ -19,4 +19,14 @@ persona_holder_chat_messages
   rich - jsonb - nullable
   ip_address - inet - not null
   created_at - timestampz - now()
-  is_edited - bool - nullable
+	edited_at - timestampz - nullable
+
+persona_posts
+	id - int8 - auto_increment - pk
+  author - text - not null
+  title - text - not null
+  content - text - not null
+  rich - jsonb - nullable
+  ip_address - inet - not null
+  created_at - timestampz - now()
+	edited_at - timestampz - nullable
