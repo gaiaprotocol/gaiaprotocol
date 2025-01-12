@@ -1,5 +1,5 @@
 personas
-	wallet_address - text, ("auth"."jwt"() ->> 'wallet_address'::"text") - pk
+	wallet_address - text - pk
   name - text - nullable
   is_ens_name - boolean - nullable
   is_basename - boolean - nullable
@@ -15,7 +15,7 @@ personas
 persona_holder_chat_messages
   id - int8 - pk
   sender - text - not null
-  content - text - not null
+  content - text - nullable
   rich - jsonb - nullable
   ip_address - inet - not null
   created_at - timestampz - now()

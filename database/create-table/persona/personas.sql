@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "public"."personas" (
-  "wallet_address" "text" DEFAULT ("auth"."jwt"() ->> 'wallet_address'::"text") NOT NULL,
+  "wallet_address" "text" NOT NULL,
   "name" "text",
   "is_ens_name" boolean,
   "is_basename" boolean,
