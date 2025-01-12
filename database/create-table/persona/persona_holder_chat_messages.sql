@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS "public"."persona_holder_chat_messages" (
   "rich" "jsonb",
   "ip_address" "inet" NOT NULL,
   "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-  "edited_at" timestamp with time zone,
+  "edited_at" timestamp with time zone
 );
 
 ALTER TABLE "public"."persona_holder_chat_messages" OWNER TO "postgres";
