@@ -1,4 +1,5 @@
 CREATE TABLE IF NOT EXISTS "public"."persona_holder_chat_messages" (
+  "persona_owner" "text" NOT NULL,
   "id" bigint NOT NULL,
   "author" "text" NOT NULL,
   "content" "text",
@@ -12,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "public"."persona_holder_chat_messages" (
 ALTER TABLE "public"."persona_holder_chat_messages" OWNER TO "postgres";
 
 ALTER TABLE ONLY "public"."persona_holder_chat_messages"
-    ADD CONSTRAINT "persona_holder_chat_messages_pkey" PRIMARY KEY ("id");
+    ADD CONSTRAINT "persona_holder_chat_messages_pkey" PRIMARY KEY ("persona_owner", "id");
 
 ALTER TABLE "public"."persona_holder_chat_messages" ENABLE ROW LEVEL SECURITY;
 
@@ -28,7 +29,7 @@ DECLARE
 BEGIN
   UPDATE public.personas
   SET last_chet_message_id = last_chet_message_id + 1
-  WHERE wallet_address = NEW.author
+  WHERE wallet_address = NEW.persona_owner
   RETURNING last_chet_message_id INTO v_new_id;
 
   NEW.id = v_new_id;
