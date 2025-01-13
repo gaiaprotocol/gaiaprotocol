@@ -11,9 +11,11 @@ supabase functions deploy upload-profile-image
 supabase functions deploy get-user-nfts
 supabase functions deploy get-user-ens-name
 supabase functions deploy get-user-basename
-supabase functions deploy save-persona
 
 supabase functions deploy process-contract-events
+
+supabase functions deploy save-persona
+supabase functions deploy write-persona-post
 
 supabase functions deploy upload-clan-logo
 supabase functions deploy create-pending-clan-data
