@@ -4,9 +4,10 @@ CREATE TABLE IF NOT EXISTS "public"."persona_posts" (
   "title" "text" NOT NULL,
   "content" "text" NOT NULL,
   "rich" "jsonb",
+  "reactions" "jsonb"[],
   "ip_address" "inet" NOT NULL,
   "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-  "edited_at" timestamp with time zone,
+  "edited_at" timestamp with time zone
 );
 
 ALTER TABLE "public"."persona_posts" OWNER TO "postgres";

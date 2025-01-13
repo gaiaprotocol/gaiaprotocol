@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS "public"."persona_holder_chat_messages" (
   "id" bigint NOT NULL,
-  "sender" "text" NOT NULL,
+  "author" "text" NOT NULL,
   "content" "text",
   "rich" "jsonb",
+  "reactions" "jsonb"[],
   "ip_address" "inet" NOT NULL,
   "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
   "edited_at" timestamp with time zone
@@ -33,13 +34,13 @@ GRANT ALL ON SEQUENCE "public"."persona_holder_chat_messages_id_seq" TO "service
 
 CREATE POLICY "Allow read access for all users" ON public.persona_holder_chat_messages FOR SELECT USING (true);
 
-CREATE POLICY "Allow update for message sender" ON public.persona_holder_chat_messages FOR UPDATE
-USING (sender = ("auth"."jwt"() ->> 'wallet_address'::text))
+CREATE POLICY "Allow update for message author" ON public.persona_holder_chat_messages FOR UPDATE
+USING (author = ("auth"."jwt"() ->> 'wallet_address'::text))
 WITH CHECK (
   ("content" IS NOT NULL AND "content" != '' AND length("content") <= 4096)
   OR
   ("content" IS NULL AND "rich" IS NOT NULL)
 );
 
-CREATE POLICY "Allow delete for message sender" ON public.persona_holder_chat_messages FOR DELETE
-USING (sender = ("auth"."jwt"() ->> 'wallet_address'::text));
+CREATE POLICY "Allow delete for message author" ON public.persona_holder_chat_messages FOR DELETE
+USING (author = ("auth"."jwt"() ->> 'wallet_address'::text));
