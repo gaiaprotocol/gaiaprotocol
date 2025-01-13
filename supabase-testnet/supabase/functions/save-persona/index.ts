@@ -89,7 +89,7 @@ serve(async (req) => {
     } else if (personaData.is_gaia_name) {
       const { data: gaiaNameData, error } = await godModeSupabase.from(
         "gaia_names",
-      ).select("*").eq("name", personaData.name).single();
+      ).select("*").eq("name", personaData.name.split(".")[0]).single();
       if (error) throw error;
 
       if (!gaiaNameData) throw new Error("Gaia name not found");

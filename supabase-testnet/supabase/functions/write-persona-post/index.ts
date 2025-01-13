@@ -12,15 +12,15 @@ serve(async (req, ip) => {
 
   const data = await insert<
     {
+      persona_owner: string;
       id: string;
-      author: string;
       title: string;
       content: string;
       ip_address: string;
     }
   >(
     "persona_posts",
-    { author: walletAddress, title, content, ip_address: ip },
+    { persona_owner: walletAddress, title, content, ip_address: ip },
     "id",
   );
 
