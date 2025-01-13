@@ -41,7 +41,7 @@ GRANT ALL ON FUNCTION "public"."trigger_before_persona_holder_chat_messages_inse
 GRANT ALL ON FUNCTION "public"."trigger_before_persona_holder_chat_messages_insert"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."trigger_before_persona_holder_chat_messages_insert"() TO "service_role";
 
-CREATE TRIGGER "trigger_before_persona_holder_chat_messages_insert" BEFORE UPDATE ON "public"."persona_holder_chat_messages" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_before_persona_holder_chat_messages_insert"();
+CREATE TRIGGER "trigger_before_persona_holder_chat_messages_insert" BEFORE INSERT ON "public"."persona_holder_chat_messages" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_before_persona_holder_chat_messages_insert"();
 
 CREATE POLICY "Allow read access for all users" ON public.persona_holder_chat_messages FOR SELECT USING (true);
 

@@ -42,7 +42,7 @@ GRANT ALL ON FUNCTION "public"."trigger_before_persona_posts_insert"() TO "anon"
 GRANT ALL ON FUNCTION "public"."trigger_before_persona_posts_insert"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."trigger_before_persona_posts_insert"() TO "service_role";
 
-CREATE TRIGGER "trigger_before_persona_posts_insert" BEFORE UPDATE ON "public"."persona_posts" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_before_persona_posts_insert"();
+CREATE TRIGGER "trigger_before_persona_posts_insert" BEFORE INSERT ON "public"."persona_posts" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_before_persona_posts_insert"();
 
 CREATE POLICY "Allow read access for all users" ON public.persona_posts FOR SELECT USING (true);
 
