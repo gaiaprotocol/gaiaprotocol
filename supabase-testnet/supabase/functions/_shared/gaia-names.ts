@@ -12,5 +12,5 @@ export async function getGaiaName(
     "gaia_names",
   ).select("*").eq("wallet_address", walletAddress).maybeSingle();
   if (error) throw error;
-  return gaiaNameData?.name ?? "";
+  return gaiaNameData?.name ? `${gaiaNameData.name}.gaia` : "";
 }
