@@ -3,6 +3,6 @@ import { extractWalletAddressFromRequest } from "https://raw.githubusercontent.c
 import { getBasename } from "../_shared/basename.ts";
 
 serve(async (req) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
+  const walletAddress = await extractWalletAddressFromRequest(req);
   return await getBasename(walletAddress);
 });

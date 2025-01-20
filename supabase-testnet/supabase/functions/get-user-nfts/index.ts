@@ -11,7 +11,7 @@ class APIError extends Error {
 }
 
 serve(async (req) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
+  const walletAddress = await extractWalletAddressFromRequest(req);
   const { next } = await req.json();
 
   const response = await fetch(

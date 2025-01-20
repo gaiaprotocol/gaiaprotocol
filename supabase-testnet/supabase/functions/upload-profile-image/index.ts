@@ -13,7 +13,7 @@ const storage = new Storage({
 const bucket = storage.bucket("gaiaprotocol");
 
 serve(async (req) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
+  const walletAddress = await extractWalletAddressFromRequest(req);
   const formData = await req.formData();
   const file = formData.get("file");
 

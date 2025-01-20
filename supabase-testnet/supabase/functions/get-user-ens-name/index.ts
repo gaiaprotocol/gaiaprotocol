@@ -3,6 +3,6 @@ import { extractWalletAddressFromRequest } from "https://raw.githubusercontent.c
 import { getEnsName } from "../_shared/ens.ts";
 
 serve(async (req) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
+  const walletAddress = await extractWalletAddressFromRequest(req);
   return await getEnsName(walletAddress);
 });

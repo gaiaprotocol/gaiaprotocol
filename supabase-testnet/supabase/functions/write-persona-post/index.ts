@@ -3,7 +3,7 @@ import { insert } from "https://raw.githubusercontent.com/yjgaia/supabase-module
 import { extractWalletAddressFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
 
 serve(async (req, ip) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
+  const walletAddress = await extractWalletAddressFromRequest(req);
   const { title, content } = await req.json();
 
   if (typeof title !== "string" || typeof content !== "string") {

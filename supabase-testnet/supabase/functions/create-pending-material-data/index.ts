@@ -10,7 +10,7 @@ interface PendingMaterialData {
 }
 
 serve(async (req) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
+  const walletAddress = await extractWalletAddressFromRequest(req);
   const pendingMaterialData: PendingMaterialData = await req.json();
 
   if (!pendingMaterialData.game_id) throw new Error("Invalid game_id");

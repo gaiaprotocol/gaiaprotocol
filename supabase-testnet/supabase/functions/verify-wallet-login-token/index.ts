@@ -15,7 +15,7 @@ serve(async (req) => {
   if (!token) throw new Error("Missing token");
 
   // Verify the token using the secret
-  const decoded = verify(token, key) as
+  const decoded = await verify(token, key) as
     | { wallet_address?: `0x${string}` }
     | undefined;
   if (!decoded?.wallet_address) throw new Error("Invalid token");

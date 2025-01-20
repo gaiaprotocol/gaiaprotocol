@@ -44,7 +44,7 @@ function isValidName(name: string): boolean {
 }
 
 serve(async (req) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
+  const walletAddress = await extractWalletAddressFromRequest(req);
 
   const personaData = await safeFetchSingle<PersonaEntity>(
     "personas",

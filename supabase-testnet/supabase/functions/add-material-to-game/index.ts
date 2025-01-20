@@ -6,7 +6,7 @@ import {
 import { extractWalletAddressFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
 
 serve(async (req) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
+  const walletAddress = await extractWalletAddressFromRequest(req);
   const { materialAddress, gameId } = await req.json();
   if (!materialAddress || !gameId) throw new Error("Invalid request");
 

@@ -40,7 +40,7 @@ function isValidName(name: string): boolean {
 }
 
 serve(async (req) => {
-  const walletAddress = extractWalletAddressFromRequest(req);
+  const walletAddress = await extractWalletAddressFromRequest(req);
 
   const personaData: PersonaEntity = await req.json();
   if (personaData.wallet_address !== walletAddress) {

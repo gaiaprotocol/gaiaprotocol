@@ -10,7 +10,7 @@ interface PendingClanData {
 }
 
 serve(async (req) => {
-  extractWalletAddressFromRequest(req);
+  await extractWalletAddressFromRequest(req);
 
   const pendingClanData: PendingClanData = await req.json();
 
