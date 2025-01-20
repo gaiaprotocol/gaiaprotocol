@@ -1,9 +1,9 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.31.0";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import { safeStore } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
 import { extractWalletAddressFromRequest } from "https://raw.githubusercontent.com/yjgaia/wallet-login-module/refs/heads/main/deno/auth.ts";
 import { getBasename } from "../_shared/basename.ts";
 import { getEnsName } from "../_shared/ens.ts";
+import { getGaiaName } from "../_shared/gaia-names.ts";
 
 interface PersonaEntity {
   wallet_address: string;
@@ -38,11 +38,6 @@ function isValidName(name: string): boolean {
   if (name !== name.normalize("NFC")) return false;
   return true;
 }
-
-const godModeSupabase = createClient(
-  "https://dhzxulywizygtdficytt.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoenh1bHl3aXp5Z3RkZmljeXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAxMTIxNDUsImV4cCI6MjA0NTY4ODE0NX0.xUd8nqcT2aVn1j4x8c-pRbDcFSaIGtkn7SAcmKleBms",
-);
 
 serve(async (req) => {
   const walletAddress = extractWalletAddressFromRequest(req);
@@ -87,15 +82,8 @@ serve(async (req) => {
       const basename = await getBasename(walletAddress);
       if (basename !== personaData.name) throw new Error("Invalid basename");
     } else if (personaData.is_gaia_name) {
-      const { data: gaiaNameData, error } = await godModeSupabase.from(
-        "gaia_names",
-      ).select("*").eq("name", personaData.name.split(".")[0]).single();
-      if (error) throw error;
-
-      if (!gaiaNameData) throw new Error("Gaia name not found");
-      if (gaiaNameData.wallet_address !== walletAddress) {
-        throw new Error("Invalid wallet address");
-      }
+      const gaiaName = await getGaiaName(walletAddress);
+      if (gaiaName !== personaData.name) throw new Error("Invalid Gaia name");
     } else {
       if (personaData.name.length > 100) throw new Error("Name is too long");
       //if (!isValidName(personaData.name)) throw new Error("Invalid name");

@@ -15,6 +15,7 @@ supabase functions deploy get-user-basename
 supabase functions deploy process-contract-events
 
 supabase functions deploy save-persona
+supabase functions deploy reload-persona-name
 supabase functions deploy write-persona-post
 
 supabase functions deploy upload-clan-logo
