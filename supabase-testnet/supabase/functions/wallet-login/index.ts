@@ -1,4 +1,4 @@
-import { sign } from "https://esm.sh/jsonwebtoken@8.5.1";
+import { create } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 import { getAddress, verifyMessage } from "https://esm.sh/viem@2.21.47";
 import { createSiweMessage } from "https://esm.sh/viem@2.21.47/siwe";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
@@ -9,6 +9,14 @@ import {
 
 const MESSAGE_FOR_WALLET_LOGIN = Deno.env.get("MESSAGE_FOR_WALLET_LOGIN")!;
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
+
+const key = await crypto.subtle.importKey(
+  "raw",
+  new TextEncoder().encode(JWT_SECRET),
+  { name: "HMAC", hash: "SHA-256" },
+  false,
+  ["sign"],
+);
 
 serve(async (req, ip) => {
   let { walletAddress, signedMessage } = await req.json();
@@ -52,7 +60,11 @@ serve(async (req, ip) => {
   );
 
   // Generate a JWT token for the authenticated user
-  const token = sign({ wallet_address: walletAddress }, JWT_SECRET);
+  const token = await create(
+    { alg: "HS256", typ: "JWT" },
+    { wallet_address: walletAddress },
+    key,
+  );
 
   await safeStore(
     "user_sessions",
