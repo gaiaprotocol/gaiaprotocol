@@ -1,4 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.31.0";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import {
   safeFetchSingle,
@@ -54,20 +53,17 @@ serve(async (req) => {
   if (!personaData) throw new Error("Persona not found");
 
   let name: string | undefined | null = personaData.name;
-  if (name) {
-    if (personaData.is_ens_name) {
-      const ensName = await getEnsName(walletAddress);
-      if (ensName !== name) name = ensName;
-    } else if (personaData.is_basename) {
-      const basename = await getBasename(walletAddress);
-      if (basename !== name) name = basename;
-    } else if (personaData.is_gaia_name) {
-      const gaiaName = await getGaiaName(walletAddress);
-      if (gaiaName !== name) name = gaiaName;
-    }
-    if (name.trim() === "") name = undefined;
+  if (personaData.is_ens_name) {
+    const ensName = await getEnsName(walletAddress);
+    if (ensName !== name) name = ensName;
+  } else if (personaData.is_basename) {
+    const basename = await getBasename(walletAddress);
+    if (basename !== name) name = basename;
+  } else if (personaData.is_gaia_name) {
+    const gaiaName = await getGaiaName(walletAddress);
+    if (gaiaName !== name) name = gaiaName;
   }
-
+  if (name?.trim() === "") name = undefined;
   if (name === undefined) name = null;
 
   await safeStore(
