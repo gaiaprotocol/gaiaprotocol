@@ -50,24 +50,24 @@ serve(async (req) => {
     (b) => b.select("*").eq("wallet_address", walletAddress),
   );
 
-  if (!personaData) throw new Error("Persona not found");
+  if (personaData) {
+    let name: string | undefined | null = personaData.name;
+    if (personaData.is_ens_name) {
+      const ensName = await getEnsName(walletAddress);
+      if (ensName !== name) name = ensName;
+    } else if (personaData.is_basename) {
+      const basename = await getBasename(walletAddress);
+      if (basename !== name) name = basename;
+    } else if (personaData.is_gaia_name) {
+      const gaiaName = await getGaiaName(walletAddress);
+      if (gaiaName !== name) name = gaiaName;
+    }
+    if (name?.trim() === "") name = undefined;
+    if (name === undefined) name = null;
 
-  let name: string | undefined | null = personaData.name;
-  if (personaData.is_ens_name) {
-    const ensName = await getEnsName(walletAddress);
-    if (ensName !== name) name = ensName;
-  } else if (personaData.is_basename) {
-    const basename = await getBasename(walletAddress);
-    if (basename !== name) name = basename;
-  } else if (personaData.is_gaia_name) {
-    const gaiaName = await getGaiaName(walletAddress);
-    if (gaiaName !== name) name = gaiaName;
+    await safeStore(
+      "personas",
+      (b) => b.update({ name }).eq("wallet_address", walletAddress),
+    );
   }
-  if (name?.trim() === "") name = undefined;
-  if (name === undefined) name = null;
-
-  await safeStore(
-    "personas",
-    (b) => b.update({ name }).eq("wallet_address", walletAddress),
-  );
 });
