@@ -16,6 +16,7 @@ contract Material is ERC20Permit, Ownable2Step {
     event SymbolUpdated(string symbol);
     event WhitelistAdded(address indexed account);
     event WhitelistRemoved(address indexed account);
+    event Deleted();
 
     constructor(
         address owner_,
@@ -59,6 +60,13 @@ contract Material is ERC20Permit, Ownable2Step {
 
     function burn(address from, uint256 amount) external onlyFactory {
         _burn(from, amount);
+    }
+
+    function deleteMaterial() external onlyFactory {
+        _name = "";
+        _symbol = "";
+        renounceOwnership();
+        emit Deleted();
     }
 
     function addToWhitelist(address[] calldata _addresses) external onlyOwner {

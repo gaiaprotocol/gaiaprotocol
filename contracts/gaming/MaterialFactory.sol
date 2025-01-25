@@ -98,7 +98,8 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         require(material.owner() == msg.sender, "Not material owner");
         require(material.totalSupply() == 0, "Supply must be zero");
 
-        material.renounceOwnership();
+        material.deleteMaterial();
+        delete tradingOpened[materialAddress];
         emit MaterialDeleted(materialAddress);
     }
 
