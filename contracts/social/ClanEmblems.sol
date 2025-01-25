@@ -91,7 +91,6 @@ contract ClanEmblems is HoldingRewardsBase {
 
     function transferClanOwnership(uint256 clanId, address newOwner) external {
         require(clans[clanId].owner == msg.sender, "Not clan owner");
-        require(newOwner != address(0), "Invalid new owner");
         require(balance[clanId][newOwner] > 0, "New owner must be clan member");
 
         address previousOwner = clans[clanId].owner;
