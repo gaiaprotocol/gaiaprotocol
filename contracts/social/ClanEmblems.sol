@@ -89,21 +89,6 @@ contract ClanEmblems is HoldingRewardsBase {
         emit ClanCreated(msg.sender, clanId, metadataHash);
     }
 
-    function deleteClan(uint256 clanId, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
-        require(clans[clanId].owner == msg.sender, "Not clan owner");
-
-        uint256 clanSupply = supply[clanId];
-        require(balance[clanId][msg.sender] == clanSupply, "Owner must hold the entire supply");
-
-        uint256 price = getSellPrice(clanId, clanSupply);
-        executeTrade(clanId, clanSupply, price, false, rewardRatio, holdingRewardSignature);
-
-        withdrawFees(clanId);
-
-        delete clans[clanId];
-        emit ClanDeleted(clanId);
-    }
-
     function transferClanOwnership(uint256 clanId, address newOwner) external {
         require(clans[clanId].owner == msg.sender, "Not clan owner");
         require(newOwner != address(0), "Invalid new owner");
@@ -124,6 +109,21 @@ contract ClanEmblems is HoldingRewardsBase {
         payable(msg.sender).sendValue(amount);
 
         emit FeesWithdrawn(clanId, amount);
+    }
+
+    function deleteClan(uint256 clanId, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
+        require(clans[clanId].owner == msg.sender, "Not clan owner");
+
+        uint256 _supply = supply[clanId];
+        require(balance[clanId][msg.sender] == _supply, "Owner must hold the entire supply");
+
+        uint256 price = getSellPrice(clanId, _supply);
+        executeTrade(clanId, _supply, price, false, rewardRatio, holdingRewardSignature);
+
+        withdrawFees(clanId);
+
+        delete clans[clanId];
+        emit ClanDeleted(clanId);
     }
 
     function getPrice(uint256 _supply, uint256 amount) public view returns (uint256) {
