@@ -21,6 +21,9 @@ contract ClanEmblems is HoldingRewardsBase {
     mapping(uint256 => mapping(address => uint256)) public balance;
     mapping(uint256 => uint256) public supply;
 
+    mapping(address => uint256[]) public userClans;
+    mapping(address => mapping(uint256 => uint256)) public userClanIndex;
+
     event ClanFeeRateUpdated(uint256 rate);
     event ClanCreated(address indexed clanOwner, uint256 indexed clanId, bytes32 metadataHash);
     event ClanDeleted(uint256 indexed clanId);
@@ -144,18 +147,32 @@ contract ClanEmblems is HoldingRewardsBase {
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + clanFee, "Insufficient payment");
+
+            if (balance[clanId][msg.sender] == 0) {
+                _addUserClan(msg.sender, clanId);
+            }
+
             balance[clanId][msg.sender] += amount;
             supply[clanId] += amount;
+
             protocolFeeRecipient.sendValue(protocolFee);
             clans[clanId].accumulatedFees += clanFee;
+
             if (msg.value > price + protocolFee + clanFee) {
                 payable(msg.sender).sendValue(msg.value - price - protocolFee - clanFee);
             }
         } else {
             require(balance[clanId][msg.sender] >= amount, "Insufficient balance");
+
             balance[clanId][msg.sender] -= amount;
             supply[clanId] -= amount;
+
+            if (balance[clanId][msg.sender] == 0) {
+                _removeUserClan(msg.sender, clanId);
+            }
+
             payable(msg.sender).sendValue(price - protocolFee - clanFee);
+
             protocolFeeRecipient.sendValue(protocolFee);
             clans[clanId].accumulatedFees += clanFee;
         }
@@ -186,5 +203,35 @@ contract ClanEmblems is HoldingRewardsBase {
     function sell(uint256 clanId, uint256 amount, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
         uint256 price = getSellPrice(clanId, amount);
         executeTrade(clanId, amount, price, false, rewardRatio, holdingRewardSignature);
+    }
+
+    function _addUserClan(address user, uint256 clanId) internal {
+        userClanIndex[user][clanId] = userClans[user].length;
+        userClans[user].push(clanId);
+    }
+
+    function _removeUserClan(address user, uint256 clanId) internal {
+        uint256 index = userClanIndex[user][clanId];
+        uint256 lastIndex = userClans[user].length - 1;
+
+        if (index != lastIndex) {
+            uint256 lastClanId = userClans[user][lastIndex];
+            userClans[user][index] = lastClanId;
+            userClanIndex[user][lastClanId] = index;
+        }
+
+        userClans[user].pop();
+        delete userClanIndex[user][clanId];
+    }
+
+    function sharesAnyClan(address userA, address userB) external view returns (bool) {
+        uint256[] memory clansA = userClans[userA];
+        for (uint256 i = 0; i < clansA.length; i++) {
+            uint256 clanId = clansA[i];
+            if (balance[clanId][userB] > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }
