@@ -223,6 +223,9 @@ contract ClanEmblems is HoldingRewardsBase {
     }
 
     function sell(uint256 clanId, uint256 amount, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
+        if (msg.sender == clans[clanId].owner) {
+            require(balance[clanId][msg.sender] - amount > 0, "Owner cannot sell all emblems");
+        }
         uint256 price = getSellPrice(clanId, amount);
         executeTrade(clanId, amount, price, false, rewardRatio, holdingRewardSignature);
     }
