@@ -72,16 +72,33 @@ contract ClanEmblems is HoldingRewardsBase {
         emit ClanFeeRateUpdated(_rate);
     }
 
-    function createClan(bytes32 metadataHash) external returns (uint256 clanId) {
+    function createClan(
+        bytes32 metadataHash,
+        uint256 emblemAmount,
+        uint256 rewardRatio,
+        bytes memory holdingRewardSignature
+    ) external payable returns (uint256 clanId) {
+        require(emblemAmount > 0, "Must buy at least one emblem");
+
         clanId = nextClanId++;
         clans[clanId].owner = msg.sender;
+
+        uint256 price = getBuyPrice(clanId, emblemAmount);
+        executeTrade(clanId, emblemAmount, price, true, rewardRatio, holdingRewardSignature);
+
         emit ClanCreated(msg.sender, clanId, metadataHash);
     }
 
-    function deleteClan(uint256 clanId) external {
+    function deleteClan(uint256 clanId, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
         require(clans[clanId].owner == msg.sender, "Not clan owner");
-        require(supply[clanId] == 0, "Supply must be zero");
-        require(clans[clanId].accumulatedFees == 0, "Must withdraw fees first");
+
+        uint256 clanSupply = supply[clanId];
+        require(balance[clanId][msg.sender] == clanSupply, "Owner must hold the entire supply");
+
+        uint256 price = getSellPrice(clanId, clanSupply);
+        executeTrade(clanId, clanSupply, price, false, rewardRatio, holdingRewardSignature);
+
+        withdrawFees(clanId);
 
         delete clans[clanId];
         emit ClanDeleted(clanId);
@@ -90,17 +107,22 @@ contract ClanEmblems is HoldingRewardsBase {
     function transferClanOwnership(uint256 clanId, address newOwner) external {
         require(clans[clanId].owner == msg.sender, "Not clan owner");
         require(newOwner != address(0), "Invalid new owner");
+        require(balance[clanId][newOwner] > 0, "New owner must be clan member");
+
         address previousOwner = clans[clanId].owner;
         clans[clanId].owner = newOwner;
+
         emit ClanOwnershipTransferred(clanId, previousOwner, newOwner);
     }
 
-    function withdrawFees(uint256 clanId) external {
+    function withdrawFees(uint256 clanId) public {
         require(clans[clanId].owner == msg.sender, "Not clan owner");
         uint256 amount = clans[clanId].accumulatedFees;
         require(amount > 0, "No fees to withdraw");
+
         clans[clanId].accumulatedFees = 0;
         payable(msg.sender).sendValue(amount);
+
         emit FeesWithdrawn(clanId, amount);
     }
 
