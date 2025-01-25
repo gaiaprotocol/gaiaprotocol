@@ -15,6 +15,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address payable public protocolFeeRecipient;
     uint256 public protocolFeeRate;
     uint256 public materialOwnerFeeRate;
+    mapping(address => bool) public tradingOpened;
 
     event ProtocolFeeRecipientUpdated(address indexed protocolFeeRecipient);
     event ProtocolFeeRateUpdated(uint256 rate);
@@ -27,6 +28,8 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         bytes32 metadataHash
     );
     event MaterialDeleted(address indexed materialAddress);
+    event TradingOpened(address indexed materialAddress);
+
     event TradeExecuted(
         address indexed trader,
         address indexed materialAddress,
@@ -81,6 +84,15 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         return address(newMaterial);
     }
 
+    function openTrading(address materialAddress) external {
+        Material material = Material(materialAddress);
+        require(material.owner() == msg.sender, "Not material owner");
+        require(!tradingOpened[materialAddress], "Trading already opened");
+
+        tradingOpened[materialAddress] = true;
+        emit TradingOpened(materialAddress);
+    }
+
     function deleteMaterial(address materialAddress) external {
         Material material = Material(materialAddress);
         require(material.owner() == msg.sender, "Not material owner");
@@ -120,14 +132,18 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function executeTrade(address materialAddress, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
         Material material = Material(materialAddress);
+        require(material.owner() == msg.sender || tradingOpened[materialAddress], "Trading is not opened yet");
+
         uint256 protocolFee = (price * protocolFeeRate) / 1 ether;
         uint256 materialOwnerFee = (price * materialOwnerFeeRate) / 1 ether;
 
         if (isBuy) {
             require(msg.value >= price + protocolFee + materialOwnerFee, "Insufficient payment");
+
             material.mint(msg.sender, amount);
             protocolFeeRecipient.sendValue(protocolFee);
             payable(material.owner()).sendValue(materialOwnerFee);
+
             if (msg.value > price + protocolFee + materialOwnerFee) {
                 uint256 refund = msg.value - price - protocolFee - materialOwnerFee;
                 payable(msg.sender).sendValue(refund);
@@ -135,6 +151,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         } else {
             require(material.balanceOf(msg.sender) >= amount, "Insufficient balance");
             material.burn(msg.sender, amount);
+
             uint256 netAmount = price - protocolFee - materialOwnerFee;
             payable(msg.sender).sendValue(netAmount);
             protocolFeeRecipient.sendValue(protocolFee);
