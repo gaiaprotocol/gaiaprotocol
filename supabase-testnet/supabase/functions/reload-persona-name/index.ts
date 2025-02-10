@@ -24,24 +24,6 @@ interface PersonaEntity {
   bio?: string;
 }
 
-const OPENSEA_API_KEY = Deno.env.get("OPENSEA_API_KEY")!;
-
-class APIError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-    this.name = "APIError";
-  }
-}
-
-function isValidName(name: string): boolean {
-  if (!name) return false;
-  if (!/^[a-z0-9-]+$/.test(name)) return false;
-  if (name.startsWith("-") || name.endsWith("-")) return false;
-  if (name.includes("--")) return false;
-  if (name !== name.normalize("NFC")) return false;
-  return true;
-}
-
 serve(async (req) => {
   const walletAddress = await extractWalletAddressFromRequest(req);
 
@@ -51,7 +33,8 @@ serve(async (req) => {
   );
 
   if (personaData) {
-    let name: string | undefined | null = personaData.name;
+    let name: string | undefined = personaData.name;
+
     if (personaData.is_ens_name) {
       const ensName = await getEnsName(walletAddress);
       if (ensName !== name) name = ensName;
@@ -62,12 +45,25 @@ serve(async (req) => {
       const gaiaName = await getGaiaName(walletAddress);
       if (gaiaName !== name) name = gaiaName;
     }
-    if (name?.trim() === "") name = undefined;
-    if (name === undefined) name = null;
 
-    await safeStore(
-      "personas",
-      (b) => b.update({ name }).eq("wallet_address", walletAddress),
-    );
+    if (name !== undefined) {
+      if (name === "") {
+        await safeStore(
+          "personas",
+          (b) =>
+            b.update({
+              name: null,
+              is_ens_name: null,
+              is_basename: null,
+              is_gaia_name: null,
+            }).eq("wallet_address", walletAddress),
+        );
+      } else {
+        await safeStore(
+          "personas",
+          (b) => b.update({ name }).eq("wallet_address", walletAddress),
+        );
+      }
+    }
   }
 });

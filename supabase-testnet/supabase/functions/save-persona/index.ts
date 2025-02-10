@@ -84,13 +84,29 @@ serve(async (req) => {
     if (personaData.is_ens_name) {
       const ensName = await getEnsName(walletAddress);
       if (ensName !== personaData.name) throw new Error("Invalid ENS name");
+      (personaData as any).is_basename = null;
+      (personaData as any).is_gaia_name = null;
     } else if (personaData.is_basename) {
       const basename = await getBasename(walletAddress);
       if (basename !== personaData.name) throw new Error("Invalid basename");
+      (personaData as any).is_ens_name = null;
+      (personaData as any).is_gaia_name = null;
     } else if (personaData.is_gaia_name) {
       const gaiaName = await getGaiaName(walletAddress);
       if (gaiaName !== personaData.name) throw new Error("Invalid Gaia name");
-    } else if (!isValidName(personaData.name)) throw new Error("Invalid name");
+      (personaData as any).is_ens_name = null;
+      (personaData as any).is_basename = null;
+    } else {
+      if (!isValidName(personaData.name)) throw new Error("Invalid name");
+      (personaData as any).is_ens_name = null;
+      (personaData as any).is_basename = null;
+      (personaData as any).is_gaia_name = null;
+    }
+  } else {
+    (personaData as any).name = null;
+    (personaData as any).is_ens_name = null;
+    (personaData as any).is_basename = null;
+    (personaData as any).is_gaia_name = null;
   }
 
   if (personaData.bio && personaData.bio.length > 1000) {
