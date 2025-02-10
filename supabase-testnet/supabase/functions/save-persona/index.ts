@@ -32,10 +32,15 @@ class APIError extends Error {
 
 function isValidName(name: string): boolean {
   if (!name) return false;
-  if (!/^[a-z0-9-]+$/.test(name)) return false;
+
+  const validCharsRegex = /^[\p{L}\p{N}\p{Emoji}-]+$/u;
+  if (!validCharsRegex.test(name)) return false;
+
   if (name.startsWith("-") || name.endsWith("-")) return false;
   if (name.includes("--")) return false;
+
   if (name !== name.normalize("NFC")) return false;
+
   return true;
 }
 
@@ -86,7 +91,7 @@ serve(async (req) => {
       if (gaiaName !== personaData.name) throw new Error("Invalid Gaia name");
     } else {
       if (personaData.name.length > 100) throw new Error("Name is too long");
-      //if (!isValidName(personaData.name)) throw new Error("Invalid name");
+      if (!isValidName(personaData.name)) throw new Error("Invalid name");
       if (personaData.name.includes(".")) {
         throw new Error("Name cannot contain periods");
       }
