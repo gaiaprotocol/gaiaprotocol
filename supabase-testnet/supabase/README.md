@@ -28,6 +28,8 @@ supabase functions deploy upload-material-logo
 supabase functions deploy create-pending-material-data
 supabase functions deploy sync-material-metadata-to-db
 supabase functions deploy add-material-to-game
+
+supabase functions deploy upload-user-image
 ```
 
 ## Postgres Cron
