@@ -8,21 +8,18 @@ serve(async (req) => {
   await extractWalletAddressFromRequest(req);
 
   const formData = await req.formData();
-  const file = formData.get("file");
+  const imageFile = formData.get("image");
 
-  if (!(file instanceof File)) {
-    throw new Error("Invalid file format");
-  }
+  if (!(imageFile instanceof File)) throw new Error("Invalid image format");
 
-  const response = await fetch(IMGBB_API_URL, {
+  const response = await fetch(`${IMGBB_API_URL}?key=${IMGBB_API_KEY}`, {
     method: "POST",
-    body: new FormData().append("image", file),
-    headers: {
-      Authorization: `Bearer ${IMGBB_API_KEY}`,
-    },
+    body: formData,
   });
 
   const data = await response.json();
-  console.log(data);
-  return data.data.url;
+  return {
+    imageUrl: data.data.url,
+    thumbnailUrl: data.data.thumb.url,
+  };
 });

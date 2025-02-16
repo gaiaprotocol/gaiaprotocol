@@ -17,9 +17,7 @@ serve(async (req) => {
   const formData = await req.formData();
   const file = formData.get("file");
 
-  if (!(file instanceof File)) {
-    throw new Error("Invalid file format");
-  }
+  if (!(file instanceof File)) throw new Error("Invalid file format");
 
   const fileName = `${crypto.randomUUID()}.${file.name.split(".").pop()}`;
   const filePath = `profile_images/${walletAddress}/${fileName}`;
