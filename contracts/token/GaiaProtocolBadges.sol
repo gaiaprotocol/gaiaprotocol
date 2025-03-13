@@ -15,19 +15,11 @@ contract GaiaProtocolBadges is OwnableUpgradeable, ReentrancyGuardUpgradeable, E
         __UUPSUpgradeable_init();
     }
 
-    function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-    function _update(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) internal virtual override {
-        if (from == address(0) || to == address(0)) {
-            super._update(from, to, ids, values);
-        } else {
-            revert("Soulbound tokens cannot be transferred");
-        }
+    function _update(address from, address to, uint256[] memory ids, uint256[] memory amounts) internal override {
+        require(from == address(0) || to == address(0), "Soulbound tokens cannot be transferred");
+        super._update(from, to, ids, amounts);
     }
 
     function airdrop(address[] calldata recipients, uint256 tokenId, bytes calldata data) external onlyOwner {
