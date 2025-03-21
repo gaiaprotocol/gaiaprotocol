@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -14,7 +15,8 @@ contract TradingPost is
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC721HolderUpgradeable,
-    ERC1155HolderUpgradeable
+    ERC1155HolderUpgradeable,
+    UUPSUpgradeable
 {
     using Address for address payable;
 
@@ -57,6 +59,7 @@ contract TradingPost is
     function initialize(address payable _protocolFeeRecipient, uint256 _protocolFeeRate) external initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
 
         protocolFeeRecipient = _protocolFeeRecipient;
         protocolFeeRate = _protocolFeeRate;
@@ -66,6 +69,8 @@ contract TradingPost is
         emit ProtocolFeeRecipientUpdated(_protocolFeeRecipient);
         emit ProtocolFeeRateUpdated(_protocolFeeRate);
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function updateProtocolFeeRecipient(address payable _protocolFeeRecipient) external onlyOwner {
         require(_protocolFeeRecipient != address(0), "Invalid protocol fee recipient address");

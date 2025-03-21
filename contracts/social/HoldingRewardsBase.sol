@@ -5,8 +5,9 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 

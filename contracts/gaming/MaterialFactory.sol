@@ -3,12 +3,13 @@ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./Material.sol";
 import "../libraries/PricingLib.sol";
 
-contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using Address for address payable;
 
     uint256 public priceIncrement;
@@ -49,6 +50,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     ) external initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
 
         protocolFeeRecipient = _protocolFeeRecipient;
         protocolFeeRate = _protocolFeeRate;
@@ -59,6 +61,8 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         emit ProtocolFeeRateUpdated(_protocolFeeRate);
         emit MaterialOwnerFeeRateUpdated(_materialOwnerFeeRate);
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function updateProtocolFeeRecipient(address payable _protocolFeeRecipient) external onlyOwner {
         require(_protocolFeeRecipient != address(0), "Invalid protocol fee recipient address");

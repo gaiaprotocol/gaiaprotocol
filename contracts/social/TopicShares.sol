@@ -48,6 +48,7 @@ contract TopicShares is HoldingRewardsBase {
     ) external initializer {
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
 
         require(_protocolFeeRecipient != address(0), "Invalid protocol fee recipient");
         require(_holdingVerifier != address(0), "Invalid verifier address");
@@ -63,6 +64,8 @@ contract TopicShares is HoldingRewardsBase {
         emit HolderFeeRateUpdated(_holderFeeRate);
         emit HoldingVerifierUpdated(_holdingVerifier);
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function setHolderFeeRate(uint256 _rate) external onlyOwner {
         require(_rate <= 1 ether, "Fee rate exceeds maximum");
