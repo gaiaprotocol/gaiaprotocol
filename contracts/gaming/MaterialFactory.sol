@@ -16,6 +16,8 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPS
     address payable public protocolFeeRecipient;
     uint256 public protocolFeeRate;
     uint256 public materialOwnerFeeRate;
+
+    mapping(address => bool) public isMaterial;
     mapping(address => bool) public tradingOpened;
 
     event ProtocolFeeRecipientUpdated(address indexed protocolFeeRecipient);
@@ -88,7 +90,12 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPS
         return address(newMaterial);
     }
 
-    function openTrading(address materialAddress) external {
+    modifier onlyMaterial(address materialAddress) {
+        require(isMaterial[materialAddress], "Not a material");
+        _;
+    }
+
+    function openTrading(address materialAddress) external onlyMaterial(materialAddress) {
         Material material = Material(materialAddress);
         require(material.owner() == msg.sender, "Not material owner");
         require(!tradingOpened[materialAddress], "Trading already opened");
@@ -97,7 +104,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPS
         emit TradingOpened(materialAddress);
     }
 
-    function deleteMaterial(address materialAddress) external {
+    function deleteMaterial(address materialAddress) external onlyMaterial(materialAddress) {
         Material material = Material(materialAddress);
         require(material.owner() == msg.sender, "Not material owner");
         require(material.totalSupply() == 0, "Supply must be zero");
@@ -135,7 +142,12 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPS
         return price - protocolFee - materialOwnerFee;
     }
 
-    function executeTrade(address materialAddress, uint256 amount, uint256 price, bool isBuy) private nonReentrant {
+    function executeTrade(
+        address materialAddress,
+        uint256 amount,
+        uint256 price,
+        bool isBuy
+    ) private onlyMaterial(materialAddress) nonReentrant {
         Material material = Material(materialAddress);
         require(material.owner() == msg.sender || tradingOpened[materialAddress], "Trading is not opened yet");
 
