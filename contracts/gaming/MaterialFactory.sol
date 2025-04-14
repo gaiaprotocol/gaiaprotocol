@@ -86,6 +86,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPS
 
     function createMaterial(string memory name, string memory symbol, bytes32 metadataHash) public returns (address) {
         Material newMaterial = new Material(msg.sender, name, symbol);
+        isMaterial[address(newMaterial)] = true;
         emit MaterialCreated(msg.sender, address(newMaterial), name, symbol, metadataHash);
         return address(newMaterial);
     }
@@ -142,6 +143,11 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPS
         return price - protocolFee - materialOwnerFee;
     }
 
+    function _sendMaterialOwnerFee(address owner, uint256 amount) private {
+        (bool success, ) = payable(owner).call{value: amount}("");
+        if (!success) protocolFeeRecipient.sendValue(amount);
+    }
+
     function executeTrade(
         address materialAddress,
         uint256 amount,
@@ -159,7 +165,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPS
 
             material.mint(msg.sender, amount);
             protocolFeeRecipient.sendValue(protocolFee);
-            payable(material.owner()).sendValue(materialOwnerFee);
+            _sendMaterialOwnerFee(material.owner(), materialOwnerFee);
 
             if (msg.value > price + protocolFee + materialOwnerFee) {
                 uint256 refund = msg.value - price - protocolFee - materialOwnerFee;
@@ -172,7 +178,7 @@ contract MaterialFactory is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPS
             uint256 netAmount = price - protocolFee - materialOwnerFee;
             payable(msg.sender).sendValue(netAmount);
             protocolFeeRecipient.sendValue(protocolFee);
-            payable(material.owner()).sendValue(materialOwnerFee);
+            _sendMaterialOwnerFee(material.owner(), materialOwnerFee);
         }
 
         emit TradeExecuted(

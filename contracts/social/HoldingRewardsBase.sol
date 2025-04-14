@@ -14,6 +14,7 @@ abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgra
     address payable public protocolFeeRecipient;
     uint256 public protocolFeeRate;
     address public holdingVerifier;
+    mapping(address => uint256) public nonces;
 
     event ProtocolFeeRecipientUpdated(address indexed protocolFeeRecipient);
     event ProtocolFeeRateUpdated(uint256 rate);
@@ -40,16 +41,20 @@ abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgra
     function calculateHoldingReward(
         uint256 baseAmount,
         uint256 rewardRatio,
+        uint256 nonce,
         bytes memory signature
-    ) public view returns (uint256) {
+    ) public returns (uint256) {
         if (signature.length == 0) return 0;
         require(rewardRatio <= 1 ether, "Reward ratio too high");
+        require(nonces[msg.sender] == nonce, "Invalid nonce");
 
-        bytes32 hash = keccak256(abi.encodePacked(baseAmount, rewardRatio));
+        bytes32 hash = keccak256(abi.encodePacked(msg.sender, baseAmount, rewardRatio, nonce));
         bytes32 ethSignedHash = hash.toEthSignedMessageHash();
 
         address signer = ethSignedHash.recover(signature);
         require(signer == holdingVerifier, "Invalid verifier");
+
+        nonces[msg.sender]++;
 
         return (baseAmount * rewardRatio) / 1 ether;
     }
