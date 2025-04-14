@@ -6,6 +6,11 @@ style/
 database/
 supabase/
 
+legacy/
+.vscode/
+scripts/
+utils/
+
 # OS X
 .DS_Store*
 #Icon?
