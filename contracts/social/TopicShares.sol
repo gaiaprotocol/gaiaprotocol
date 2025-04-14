@@ -103,13 +103,19 @@ contract TopicShares is HoldingRewardsBase {
         bytes32 topic,
         uint256 amount,
         uint256 rewardRatio,
+        uint256 holdingRewardNonce,
         bytes memory holdingRewardSignature
     ) external payable nonReentrant {
         Topic memory t = topics[topic];
         uint256 price = getBuyPrice(topic, amount);
 
         uint256 rawProtocolFee = (price * protocolFeeRate) / 1 ether;
-        uint256 holdingReward = calculateHoldingReward(rawProtocolFee, rewardRatio, holdingRewardSignature);
+        uint256 holdingReward = calculateHoldingReward(
+            rawProtocolFee,
+            rewardRatio,
+            holdingRewardNonce,
+            holdingRewardSignature
+        );
         uint256 protocolFee = rawProtocolFee - holdingReward;
         uint256 holderFee = ((price * holderFeeRate) / 1 ether) + holdingReward;
 
@@ -138,6 +144,7 @@ contract TopicShares is HoldingRewardsBase {
         bytes32 topic,
         uint256 amount,
         uint256 rewardRatio,
+        uint256 holdingRewardNonce,
         bytes memory holdingRewardSignature
     ) external nonReentrant {
         Topic memory t = topics[topic];
@@ -148,7 +155,12 @@ contract TopicShares is HoldingRewardsBase {
         uint256 price = getSellPrice(topic, amount);
 
         uint256 rawProtocolFee = (price * protocolFeeRate) / 1 ether;
-        uint256 holdingReward = calculateHoldingReward(rawProtocolFee, rewardRatio, holdingRewardSignature);
+        uint256 holdingReward = calculateHoldingReward(
+            rawProtocolFee,
+            rewardRatio,
+            holdingRewardNonce,
+            holdingRewardSignature
+        );
         uint256 protocolFee = rawProtocolFee - holdingReward;
         uint256 holderFee = ((price * holderFeeRate) / 1 ether) + holdingReward;
 

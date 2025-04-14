@@ -93,10 +93,16 @@ contract PersonaFragments is HoldingRewardsBase {
         uint256 price,
         bool isBuy,
         uint256 rewardRatio,
+        uint256 holdingRewardNonce,
         bytes memory holdingRewardSignature
     ) private nonReentrant {
         uint256 rawProtocolFee = (price * protocolFeeRate) / 1 ether;
-        uint256 holdingReward = calculateHoldingReward(rawProtocolFee, rewardRatio, holdingRewardSignature);
+        uint256 holdingReward = calculateHoldingReward(
+            rawProtocolFee,
+            rewardRatio,
+            holdingRewardNonce,
+            holdingRewardSignature
+        );
         uint256 protocolFee = rawProtocolFee - holdingReward;
         uint256 personaFee = ((price * personaOwnerFeeRate) / 1 ether) + holdingReward;
 
@@ -135,14 +141,21 @@ contract PersonaFragments is HoldingRewardsBase {
         address persona,
         uint256 amount,
         uint256 rewardRatio,
+        uint256 holdingRewardNonce,
         bytes memory holdingRewardSignature
     ) external payable {
         uint256 price = getBuyPrice(persona, amount);
-        executeTrade(persona, amount, price, true, rewardRatio, holdingRewardSignature);
+        executeTrade(persona, amount, price, true, rewardRatio, holdingRewardNonce, holdingRewardSignature);
     }
 
-    function sell(address persona, uint256 amount, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
+    function sell(
+        address persona,
+        uint256 amount,
+        uint256 rewardRatio,
+        uint256 holdingRewardNonce,
+        bytes memory holdingRewardSignature
+    ) external {
         uint256 price = getSellPrice(persona, amount);
-        executeTrade(persona, amount, price, false, rewardRatio, holdingRewardSignature);
+        executeTrade(persona, amount, price, false, rewardRatio, holdingRewardNonce, holdingRewardSignature);
     }
 }

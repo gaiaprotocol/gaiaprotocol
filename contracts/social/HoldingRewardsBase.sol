@@ -48,7 +48,9 @@ abstract contract HoldingRewardsBase is OwnableUpgradeable, ReentrancyGuardUpgra
         require(rewardRatio <= 1 ether, "Reward ratio too high");
         require(nonces[msg.sender] == nonce, "Invalid nonce");
 
-        bytes32 hash = keccak256(abi.encodePacked(msg.sender, baseAmount, rewardRatio, nonce));
+        bytes32 hash = keccak256(
+            abi.encodePacked(address(this), block.chainid, msg.sender, baseAmount, rewardRatio, nonce)
+        );
         bytes32 ethSignedHash = hash.toEthSignedMessageHash();
 
         address signer = ethSignedHash.recover(signature);

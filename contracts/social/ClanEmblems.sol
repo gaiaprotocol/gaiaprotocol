@@ -79,6 +79,7 @@ contract ClanEmblems is HoldingRewardsBase {
         bytes32 metadataHash,
         uint256 emblemAmount,
         uint256 rewardRatio,
+        uint256 holdingRewardNonce,
         bytes memory holdingRewardSignature
     ) external payable returns (uint256 clanId) {
         require(emblemAmount > 0, "Must buy at least one emblem");
@@ -87,7 +88,7 @@ contract ClanEmblems is HoldingRewardsBase {
         clans[clanId].owner = msg.sender;
 
         uint256 price = getBuyPrice(clanId, emblemAmount);
-        executeTrade(clanId, emblemAmount, price, true, rewardRatio, holdingRewardSignature);
+        executeTrade(clanId, emblemAmount, price, true, rewardRatio, holdingRewardNonce, holdingRewardSignature);
 
         emit ClanCreated(msg.sender, clanId, metadataHash);
     }
@@ -113,14 +114,19 @@ contract ClanEmblems is HoldingRewardsBase {
         emit FeesWithdrawn(clanId, amount);
     }
 
-    function deleteClan(uint256 clanId, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
+    function deleteClan(
+        uint256 clanId,
+        uint256 rewardRatio,
+        uint256 holdingRewardNonce,
+        bytes memory holdingRewardSignature
+    ) external {
         require(clans[clanId].owner == msg.sender, "Not clan owner");
 
         uint256 _supply = supply[clanId];
         require(balance[clanId][msg.sender] == _supply, "Owner must hold the entire supply");
 
         uint256 price = getSellPrice(clanId, _supply);
-        executeTrade(clanId, _supply, price, false, rewardRatio, holdingRewardSignature);
+        executeTrade(clanId, _supply, price, false, rewardRatio, holdingRewardNonce, holdingRewardSignature);
 
         withdrawFees(clanId);
 
@@ -160,12 +166,18 @@ contract ClanEmblems is HoldingRewardsBase {
         uint256 price,
         bool isBuy,
         uint256 rewardRatio,
+        uint256 holdingRewardNonce,
         bytes memory holdingRewardSignature
     ) private nonReentrant {
         require(clans[clanId].owner != address(0), "Clan does not exist");
 
         uint256 rawProtocolFee = (price * protocolFeeRate) / 1 ether;
-        uint256 holdingReward = calculateHoldingReward(rawProtocolFee, rewardRatio, holdingRewardSignature);
+        uint256 holdingReward = calculateHoldingReward(
+            rawProtocolFee,
+            rewardRatio,
+            holdingRewardNonce,
+            holdingRewardSignature
+        );
         uint256 protocolFee = rawProtocolFee - holdingReward;
         uint256 clanFee = ((price * clanFeeRate) / 1 ether) + holdingReward;
 
@@ -218,18 +230,25 @@ contract ClanEmblems is HoldingRewardsBase {
         uint256 clanId,
         uint256 amount,
         uint256 rewardRatio,
+        uint256 holdingRewardNonce,
         bytes memory holdingRewardSignature
     ) external payable {
         uint256 price = getBuyPrice(clanId, amount);
-        executeTrade(clanId, amount, price, true, rewardRatio, holdingRewardSignature);
+        executeTrade(clanId, amount, price, true, rewardRatio, holdingRewardNonce, holdingRewardSignature);
     }
 
-    function sell(uint256 clanId, uint256 amount, uint256 rewardRatio, bytes memory holdingRewardSignature) external {
+    function sell(
+        uint256 clanId,
+        uint256 amount,
+        uint256 rewardRatio,
+        uint256 holdingRewardNonce,
+        bytes memory holdingRewardSignature
+    ) external {
         if (msg.sender == clans[clanId].owner) {
             require(balance[clanId][msg.sender] - amount > 0, "Owner cannot sell all emblems");
         }
         uint256 price = getSellPrice(clanId, amount);
-        executeTrade(clanId, amount, price, false, rewardRatio, holdingRewardSignature);
+        executeTrade(clanId, amount, price, false, rewardRatio, holdingRewardNonce, holdingRewardSignature);
     }
 
     function _addUserClan(address user, uint256 clanId) internal {
