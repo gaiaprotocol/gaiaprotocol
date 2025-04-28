@@ -165,6 +165,7 @@ contract TopicShares is HoldingRewardsBase {
         uint256 holderFee = ((price * holderFeeRate) / 1 ether) + holdingReward;
 
         holder.balance -= amount;
+        holder.feeDebt -= int256((amount * t.accFeePerUnit) / ACC_FEE_PRECISION);
         t.supply -= amount;
 
         if (t.supply > 0) {
